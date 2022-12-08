@@ -25,30 +25,29 @@ class MultiScaleFedGNN(nn.Module):
         self.server_loc_agg = base_models.Hcov_node2edge()
         self.server_loc_gcn = getattr(base_models, 'GCN')(loc_dim_1, 64, loc_dim_2)
         self.clients_usr_agg = base_models.Hcov_edge2node(loc_dim_2, usr_dim1)
-        self.clients_rnn = getattr(base_models, 'LSTM')(usr_dim1, usr_dim2, rnn_lay_num, bias=True, batch_first=True, dropout=0.2)
+        self.clients_rnn = getattr(base_models, 'LSTM')(usr_dim1, usr_dim2, rnn_lay_num, bias=True, batch_first=False, dropout=0.2)
         self.output_layer = nn.Linear(usr_dim2 , class_num)
     # TODO: emphasize that we add noise on the updated values of usr embedding.
     # TODO: notice that we can add noise to the xxx
-    def forward(self, obf_hyperedge_idx, ori_hyperedge_idx, loc_graph_idx=None):
+    def forward(self, hyperedge_seq, loc_graph_idx=None):
         # usr emb add noise
         out = self.usr_emb
-
+        outseq = None
         # aggregate from node to edge in server
-        out = self.server_loc_agg(out, obf_hyperedge_idx)
-
-        # aggregate from neighbor locations
-        # out = self.server_loc_gcn({'x': out, 'edge_index': loc_graph_idx})
-
-        # aggregate from edge to node in clients
-        out = self.clients_usr_agg(out, ori_hyperedge_idx)
-        # Initialize hidden and cell states if None
-        if h is None:
-            h = torch.zeros(x.shape[0], current_dim)
-        if c is None:
-            c = torch.zeros(x.shape[0], current_dim)
+        for hyperedge_idx in hyperedge_seq:
+            # aggregate from neighbor locations
+            out = self.server_loc_agg(out, hyperedge_idx)
+            # aggregate from edge to node in clients
+            out = self.clients_usr_agg(out, hyperedge_idx)
+            out = out.unsequezee(0)
+            if outseq:
+                outseq = out
+            else:
+                outseq = torch.cat(outseq, out)
 
         # process with RNN-based model
-        out = self.clients_rnn(out, h, c)
+        out = self.clients_rnn(outseq)
+        out = self.output_layer(out)
         return out
 
 class RNN(torch.nn.Module):
