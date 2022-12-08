@@ -33,20 +33,19 @@ class MultiScaleFedGNN(nn.Module):
     def forward(self, hyperedge_seq, loc_graph_idx=None):
         # usr emb add noise
         # out = self.usr_emb(range(self.usr_num))
-        out = self.usr_emb.weight
+        usr_input = self.usr_emb.weight
         outseq = None
         # aggregate from node to edge in server
         for hyperedge_idx in hyperedge_seq:
             # aggregate from neighbor locations
-            out = self.server_loc_agg(out, hyperedge_idx)
+            loc_emb, num_nodes = self.server_loc_agg(usr_input, hyperedge_idx)
             # aggregate from edge to node in clients
-            out = self.clients_usr_agg(out, hyperedge_idx)
-            a = 1
-            out = out.unsequezee(0)
-            if outseq:
-                outseq = out
+            usr_emb = self.clients_usr_agg(loc_emb, num_nodes, hyperedge_idx)
+            usr_emb = usr_emb.unsqueeze(0)
+            if outseq is None:
+                outseq = usr_emb
             else:
-                outseq = torch.cat(outseq, out)
+                outseq = torch.cat((outseq, usr_emb), dim=0)
 
         # process with RNN-based model
         out = self.clients_rnn(outseq)

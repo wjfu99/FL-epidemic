@@ -40,7 +40,7 @@ class Hcov_node2edge(MessagePassing):
                              size=(num_nodes, num_edges))
         # out = self.propagate(hyperedge_index.flip([0]), x=out, norm=D,
         #                      alpha=alpha, size=(num_edges, num_nodes))
-        return out
+        return out, num_nodes
 
 
 class Hcov_edge2node(MessagePassing):
@@ -50,8 +50,8 @@ class Hcov_edge2node(MessagePassing):
         super(Hcov_edge2node, self).__init__()
         self.lin = Linear(in_channels, heads * out_channels, bias=False,
                           weight_initializer='glorot')
-    def forward(self, x, hyperedge_index , hyperedge_weight=None):
-        num_nodes, num_edges = x.size(0), 0
+    def forward(self, x, num_nodes, hyperedge_index , hyperedge_weight=None):
+        num_edges = 0
         if hyperedge_index.numel() > 0:
             num_edges = int(hyperedge_index[1].max()) + 1
 
