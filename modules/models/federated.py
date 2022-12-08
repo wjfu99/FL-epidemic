@@ -48,8 +48,8 @@ class MultiScaleFedGNN(nn.Module):
                 outseq = torch.cat((outseq, usr_emb), dim=0)
 
         # process with RNN-based model
-        out = self.clients_rnn(outseq)
-        out = self.output_layer(out)
+        out, (h, c) = self.clients_rnn(outseq)
+        out = self.output_layer(out[-1, :, :]) #Utilize the last output of RNN for prediction.
         return out
 #
 # class RNN(torch.nn.Module):
