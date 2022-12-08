@@ -15,7 +15,7 @@ class Hcov_node2edge(MessagePassing):
         super(Hcov_node2edge, self).__init__()
     # TODO: 1. try to introduce the attention
     # TODO: 2 hyperedge_weight suit for adjusting weights between nodes and edges
-    def forward(self, x, hyperedge_index , hyperedge_weight):
+    def forward(self, x, hyperedge_index , hyperedge_weight=None):
         
         num_nodes, num_edges = x.size(0), 0
         if hyperedge_index.numel() > 0:
@@ -50,7 +50,7 @@ class Hcov_edge2node(MessagePassing):
         super(Hcov_edge2node, self).__init__()
         self.lin = Linear(in_channels, heads * out_channels, bias=False,
                           weight_initializer='glorot')
-    def forward(self, x, hyperedge_index , hyperedge_weight):
+    def forward(self, x, hyperedge_index , hyperedge_weight=None):
         num_nodes, num_edges = x.size(0), 0
         if hyperedge_index.numel() > 0:
             num_edges = int(hyperedge_index[1].max()) + 1

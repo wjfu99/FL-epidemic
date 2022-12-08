@@ -10,16 +10,19 @@ import torch
 # a = eng.get_traj_mat
 traj = eng.get_traj_mat
 usr_num = eng.get_usr_num
-graph_seq = hypergraph_sequence_generator(traj[:, :20*48], seq_num=20)
-eng.next(20*48)
 
-eng.next(48)
+# eng.next(20*48)
+#
+# eng.next(48)
 label = eng.get_usr_label
 
 idx_train = 1
 idx_test = 1
 
+# Define the default GPU device
 device = torch.device("cuda:0")
+# Generate the hypergraph sequence
+graph_seq = hypergraph_sequence_generator(traj[:, :20*48], seq_num=20, device=device)
 model = MultiScaleFedGNN(usr_num=usr_num).to(device)
 
 outputs = model(graph_seq, graph_seq)
@@ -43,7 +46,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
             optimizer.zero_grad()
             with torch.set_grad_enabled(phase == 'train'):
                 # outputs = model(fts, support)
-                outputs = model(graph_seq, graph_seq)
+                outputs = model(graph_seq)
                 loss = criterion(outputs[idx], label[idx])
                 _, preds = torch.max(outputs, 1)
 

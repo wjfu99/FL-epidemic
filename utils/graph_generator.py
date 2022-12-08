@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 def hypergraph_generator(traj):
     hyperedge_index = [[], []]
@@ -10,9 +11,9 @@ def hypergraph_generator(traj):
     hyperedge_index = np.array(hyperedge_index)
     return hyperedge_index
 
-def hypergraph_sequence_generator(traj, seq_num):
+def hypergraph_sequence_generator(traj, seq_num, device):
     trajs = np.split(traj, seq_num, axis=1)
-    hyperedge_index_seq = [hypergraph_generator(i) for i in trajs]
+    hyperedge_index_seq = [torch.tensor(hypergraph_generator(i)).to(device) for i in trajs]
     return hyperedge_index_seq
 
 
