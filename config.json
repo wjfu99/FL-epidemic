@@ -1,0 +1,9 @@
+{
+  "debug": true,
+
+  "max_epoch": 1000,
+  "lr": 0.001,
+  "milestone": [100, 200, 300],
+  "gamma": 0.7,
+  "weight_decay": 0
+}
