@@ -208,19 +208,19 @@ class Engine:
         return len(self.usr_dic)
     
     @property
-    def get_usr_label(self):
-        class_dic = {
-            'S':0,
-            'E':1,
-            'I':2,
-            'R':3
-        }
+    def get_usr_states(self):
+        # class_dic = {
+        #     'S':0,
+        #     'E':1,
+        #     'I':2,
+        #     'R':3
+        # }
         label=[]
         for usr in self.usr_dic.values():
             state = usr.get_state
-            state = class_dic.get(state)
+            # state = class_dic.get(state)
             label.append(state)
-        label = np.array(label)
+        # lbls = np.array(lbls)
         return label
     
     

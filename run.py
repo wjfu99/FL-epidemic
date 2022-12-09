@@ -3,11 +3,14 @@ import numpy as np
 from modules import MultiScaleFedGNN
 # import modules
 from Agent_Epi_Sim import eng
-from utils import hypergraph_generator, hypergraph_sequence_generator
+from utils import hypergraph_generator, hypergraph_sequence_generator, label_generator
 import torch
 import torch.optim as optim
+from torch.nn import functional as F
 import os
-import configparser, json
+import configparser
+import json
+from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, recall_score, precision_score, precision_recall_curve
 
 # load the cfg file
 # cfg = configparser.ConfigParser()
@@ -28,20 +31,26 @@ else:
 # a = eng.get_traj_mat
 traj = eng.get_traj_mat
 usr_num = eng.get_usr_num
-# eng.next(20*48)
-# eng.next(48)
-label = eng.get_usr_label
-idx_train = 1
-idx_test = 1
+eng.next(20*48)
+eng.next(48)
+lbls = eng.get_usr_states
+lbls = torch.tensor(label_generator(lbls)).to(device)
+
+train_ratio = 0.4
+sample_num = lbls.shape[0]
+train_num = int(sample_num*train_ratio)
+idx_train = np.array(range(train_num))
+idx_test = np.array(range(train_num, sample_num))
 
 
 # Generate the hypergraph sequence
 graph_seq = hypergraph_sequence_generator(traj[:, :20*48], seq_num=20, device=device)
 
 model = MultiScaleFedGNN(usr_num=usr_num).to(device)
+criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor([1, 1]).to(device))
 optimizer = optim.Adam(model.parameters(), lr=cfg["lr"], weight_decay=cfg["weight_decay"]) # TODO: SGD for FL?
 schedular = optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg["milestones"], gamma=cfg['gamma'])
-outputs = model(graph_seq, graph_seq)
+
 
 def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=10):
 
@@ -49,6 +58,9 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
         if epoch % print_freq == 0:
             print('-' * 10)
             print(f'Epoch {epoch}/{num_epochs - 1}')
+        # init parameters
+        loss_val = []
+
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
             if phase == 'train':
@@ -62,8 +74,9 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
             optimizer.zero_grad()
             with torch.set_grad_enabled(phase == 'train'):
                 # outputs = model(fts, support)
-                outputs = model(graph_seq)
-                loss = criterion(outputs[idx], label[idx])
+                outputs = model(graph_seq, graph_seq)
+                loss = criterion(outputs[idx], lbls[idx])
+
                 _, preds = torch.max(outputs, 1)
 
                 # backward + optimize only if in training phase
@@ -71,5 +84,24 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
                     loss.backward()
                     optimizer.step()
                     scheduler.step()
+            prob = F.softmax(outputs, dim=1).cpu().detach()
+            precision, recall, thresholds = precision_recall_curve(lbls[idx].cpu(),
+                                                                   prob[idx, 1])
+            fscore = (2 * precision * recall) / (precision + recall)  # calculate the f1 score
+            epoch_f1 = fscore.max()
+            max_f1_index = np.argmax(epoch_f1)
+            threshold = thresholds[max_f1_index]
+            epoch_pre = precision[max_f1_index]
+            epoch_rec = recall[max_f1_index]
+            epoch_auc = roc_auc_score(lbls[idx].cpu(), prob[idx, 1])
+            epoch_loss = loss.item()
+            epoch_acc = accuracy_score(lbls[idx].cpu(), prob[idx, 1] > threshold)
+            if epoch % print_freq == 0:
+                print(f'{phase} Loss: {epoch_loss:.4f}  Auc : {epoch_auc} Acc: {epoch_acc:.4f} Pre: {epoch_pre:.4f} Rec: {epoch_rec:.4f}')
+            if phase == 'val':
+                loss_val.append(epoch_loss)
 
 # if __name__ == "__main__":
+
+
+train_model(model, criterion, optimizer, schedular, cfg['max_epoch'])

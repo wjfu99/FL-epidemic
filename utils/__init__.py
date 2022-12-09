@@ -1,1 +1,2 @@
 from .graph_generator import hypergraph_generator, hypergraph_sequence_generator
+from .label_format import label_generator
