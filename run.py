@@ -9,14 +9,19 @@ import torch.optim as optim
 import os
 import configparser, json
 
-# load the config file
-# config = configparser.ConfigParser()
-# config.read('config.ini')
+# load the cfg file
+# cfg = configparser.ConfigParser()
+# cfg.read('cfg.ini')
 with open("config.json", 'r') as f:
-    config = json.load(f)
+    cfg = json.load(f)
 
 # For more specific debugging results.
-os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+if cfg["debug"]:
+    os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+    device = torch.device("cpu")
+else:
+    # Define the default GPU device
+    device = torch.device("cuda:1")
 
 
 # Process the epidemic data.
@@ -29,15 +34,13 @@ label = eng.get_usr_label
 idx_train = 1
 idx_test = 1
 
-# Define the default GPU device
-device = torch.device("cpu")
 
 # Generate the hypergraph sequence
 graph_seq = hypergraph_sequence_generator(traj[:, :20*48], seq_num=20, device=device)
 
 model = MultiScaleFedGNN(usr_num=usr_num).to(device)
-optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=0.1) # TODO: SGD for FL?
-schedular = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 200, 300], gamma=[0.7])
+optimizer = optim.Adam(model.parameters(), lr=cfg["lr"], weight_decay=cfg["weight_decay"]) # TODO: SGD for FL?
+schedular = optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg["milestones"], gamma=cfg['gamma'])
 outputs = model(graph_seq, graph_seq)
 
 def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=10):
