@@ -5,7 +5,15 @@ from modules import MultiScaleFedGNN
 from Agent_Epi_Sim import eng
 from utils import hypergraph_generator, hypergraph_sequence_generator
 import torch
+import torch.optim as optim
 import os
+import configparser, json
+
+# load the config file
+# config = configparser.ConfigParser()
+# config.read('config.ini')
+with open("config.json", 'r') as f:
+    config = json.load(f)
 
 # For more specific debugging results.
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
@@ -28,7 +36,8 @@ device = torch.device("cpu")
 graph_seq = hypergraph_sequence_generator(traj[:, :20*48], seq_num=20, device=device)
 
 model = MultiScaleFedGNN(usr_num=usr_num).to(device)
-
+optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=0.1) # TODO: SGD for FL?
+schedular = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 200, 300], gamma=[0.7])
 outputs = model(graph_seq, graph_seq)
 
 def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=10):
