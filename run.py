@@ -7,6 +7,7 @@ from utils import hypergraph_generator, hypergraph_sequence_generator, label_gen
 import torch
 import torch.optim as optim
 from torch.nn import functional as F
+from torchinfo import summary
 import os
 import configparser
 import json
@@ -47,6 +48,7 @@ idx_test = np.array(range(train_num, sample_num))
 graph_seq = hypergraph_sequence_generator(traj[:, :20*48], seq_num=20, device=device)
 
 model = MultiScaleFedGNN(usr_num=usr_num).to(device)
+summary(model)
 criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor([1, 1]).to(device))
 optimizer = optim.Adam(model.parameters(), lr=cfg["lr"], weight_decay=cfg["weight_decay"]) # TODO: SGD for FL?
 schedular = optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg["milestones"], gamma=cfg['gamma'])
@@ -82,6 +84,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
                     loss.backward()
                     optimizer.step()
                     scheduler.step()
+            # Eval metrics estimation.
             prob = F.softmax(outputs, dim=1).cpu().detach()
             precision, recall, thresholds = precision_recall_curve(lbls[idx].cpu(),
                                                                    prob[idx, 1])
