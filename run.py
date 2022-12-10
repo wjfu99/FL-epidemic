@@ -7,6 +7,7 @@ from utils import hypergraph_generator, hypergraph_sequence_generator, label_gen
 import torch
 import torch.optim as optim
 from torch.nn import functional as F
+from torch.utils.tensorboard import SummaryWriter
 from torchinfo import summary
 import os
 import configparser
@@ -53,6 +54,8 @@ criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor([1, 1]).to(device
 optimizer = optim.Adam(model.parameters(), lr=cfg["lr"], weight_decay=cfg["weight_decay"]) # TODO: SGD for FL?
 schedular = optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg["milestones"], gamma=cfg['gamma'])
 
+writer = SummaryWriter()
+
 
 def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=10):
 
@@ -84,6 +87,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
                     loss.backward()
                     optimizer.step()
                     scheduler.step()
+
             # Eval metrics estimation.
             prob = F.softmax(outputs, dim=1).cpu().detach()
             precision, recall, thresholds = precision_recall_curve(lbls[idx].cpu(),
@@ -94,16 +98,26 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
             threshold = thresholds[max_f1_index]
             epoch_pre = precision[max_f1_index]
             epoch_rec = recall[max_f1_index]
-            epoch_auc = roc_auc_score(lbls[idx].cpu(), prob[idx, 1])
+            # epoch_auc = roc_auc_score(lbls[idx].cpu(), prob[idx, 1])
             epoch_loss = loss.item()
             epoch_acc = accuracy_score(lbls[idx].cpu(), prob[idx, 1] > threshold)
-            # Print training information.
-            if epoch % print_freq == 0:
-                print('-' * 10)
-                print(f'Epoch {epoch}/{num_epochs - 1}')
-                print(f'{phase} Loss: {epoch_loss:.4f}  Auc : {epoch_auc} Acc: {epoch_acc:.4f} Pre: {epoch_pre:.4f} Rec: {epoch_rec:.4f}')
-            if phase == 'val':
-                loss_val.append(epoch_loss)
+
+        # Print training information.
+        if epoch % print_freq == 0:
+            print('-' * 10)
+            print(f'Epoch {epoch}/{num_epochs - 1}')
+            print(f'{phase} Loss: {epoch_loss:.4f}  '
+                  # f'Auc : {epoch_auc} '
+                  f'Acc: {epoch_acc:.4f} Pre: {epoch_pre:.4f} Rec: {epoch_rec:.4f}')
+        if phase == 'val':
+            loss_val.append(epoch_loss)
+            # Training process visualization.
+            writer.add_scalars('loss', {
+                'train_loss': epoch_loss,
+                'eval_loss': epoch_loss
+            }, epoch)
+            writer.add_pr_curve('pr_curve'+str(epoch), lbls[idx].cpu(), prob[idx, 1])
+    writer.close()
 
 # if __name__ == "__main__":
 
