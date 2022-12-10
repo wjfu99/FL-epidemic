@@ -55,9 +55,7 @@ schedular = optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg["milestones
 def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=10):
 
     for epoch in range(num_epochs):
-        if epoch % print_freq == 0:
-            print('-' * 10)
-            print(f'Epoch {epoch}/{num_epochs - 1}')
+
         # init parameters
         loss_val = []
 
@@ -96,7 +94,10 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
             epoch_auc = roc_auc_score(lbls[idx].cpu(), prob[idx, 1])
             epoch_loss = loss.item()
             epoch_acc = accuracy_score(lbls[idx].cpu(), prob[idx, 1] > threshold)
+            # Print training information.
             if epoch % print_freq == 0:
+                print('-' * 10)
+                print(f'Epoch {epoch}/{num_epochs - 1}')
                 print(f'{phase} Loss: {epoch_loss:.4f}  Auc : {epoch_auc} Acc: {epoch_acc:.4f} Pre: {epoch_pre:.4f} Rec: {epoch_rec:.4f}')
             if phase == 'val':
                 loss_val.append(epoch_loss)
