@@ -1,9 +1,29 @@
 {
-  "debug": false,
+  "fun_args":
+  {
+    "debug": false,
+    "tensorboard": true
 
-  "max_epoch": 1000,
-  "lr": 0.001,
-  "milestones": [100, 200, 300],
-  "gamma": 0.7,
-  "weight_decay": 0
+  },
+  "env_args":
+  {
+    "train_ratio": 0.4,
+    "simulation_days": 20
+
+  },
+  "model_args":
+  {
+    "eps": 1,
+    "delt": 1
+
+  },
+  "optim_args":
+  {
+    "max_epoch": 1000,
+    "lr": 0.001,
+    "milestones": [100, 200, 300],
+    "gamma": 0.7,
+    "weight_decay": 0
+  }
+
 }

@@ -14,7 +14,7 @@ class ClientModel(nn.Module):
 
     
 class MultiScaleFedGNN(nn.Module):
-    def __init__(self, usr_num, usr_dim=32, loc_dim_1=64, loc_dim_2=64, usr_dim1=32, usr_dim2=16, rnn_lay_num=2, class_num=2):
+    def __init__(self, usr_num, usr_dim=32, loc_dim_1=64, loc_dim_2=64, usr_dim1=32, usr_dim2=16, rnn_lay_num=2, class_num=2, **kwargs):
         super().__init__()
         self.usr_num = usr_num
         # init user embedding

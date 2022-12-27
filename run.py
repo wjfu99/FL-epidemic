@@ -21,7 +21,7 @@ with open("config.json", 'r') as f:
     cfg = json.load(f)
 
 # For more specific debugging results.
-if cfg["debug"]:
+if cfg['fun_args']["debug"]:
     os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
     device = torch.device("cpu")
 else:
@@ -38,7 +38,7 @@ eng.next(48)
 lbls = eng.get_usr_states
 lbls = torch.tensor(label_generator(lbls)).to(device)
 
-train_ratio = 0.4
+train_ratio = cfg['env_args']['train_ratio']
 sample_num = lbls.shape[0]
 train_num = int(sample_num*train_ratio)
 idx_train = np.array(range(train_num))
@@ -48,11 +48,11 @@ idx_test = np.array(range(train_num, sample_num))
 # Generate the hypergraph sequence
 graph_seq = hypergraph_sequence_generator(traj[:, :20*48], seq_num=20, device=device)
 
-model = MultiScaleFedGNN(usr_num=usr_num).to(device)
+model = MultiScaleFedGNN(usr_num=usr_num, **cfg).to(device)
 summary(model)
 criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor([1, 1]).to(device))
-optimizer = optim.Adam(model.parameters(), lr=cfg["lr"], weight_decay=cfg["weight_decay"]) # TODO: SGD for FL?
-schedular = optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg["milestones"], gamma=cfg['gamma'])
+optimizer = optim.Adam(model.parameters(), lr=cfg['optim_args']["lr"], weight_decay=cfg['optim_args']["weight_decay"]) # TODO: SGD for FL?
+schedular = optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg['optim_args']["milestones"], gamma=cfg['optim_args']['gamma'])
 
 writer = SummaryWriter()
 
@@ -122,4 +122,4 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
 # if __name__ == "__main__":
 
 
-train_model(model, criterion, optimizer, schedular, cfg['max_epoch'])
+train_model(model, criterion, optimizer, schedular, cfg['optim_args']['max_epoch'])
