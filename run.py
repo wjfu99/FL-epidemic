@@ -13,6 +13,7 @@ import os
 import configparser
 import json
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, recall_score, precision_score, precision_recall_curve
+from utils.fake_loc_generator import fake_loc_gen
 
 # load the cfg file
 # cfg = configparser.ConfigParser()
@@ -48,7 +49,10 @@ idx_test = np.array(range(train_num, sample_num))
 # Generate the hypergraph sequence
 graph_seq = hypergraph_sequence_generator(traj[:, :20*48], seq_num=20, device=device)
 
-model = MultiScaleFedGNN(usr_num=usr_num, **cfg).to(device)
+# Fake location generation
+real_locs, fake_locs = fake_loc_gen(traj[:, :20*48], seq_num=20)
+cfg['model_args']['real_locs'], cfg['model_args']['fake_locs'] = real_locs, fake_locs
+model = MultiScaleFedGNN(usr_num=usr_num, **cfg['model_args']).to(device)
 summary(model)
 criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor([1, 1]).to(device))
 optimizer = optim.Adam(model.parameters(), lr=cfg['optim_args']["lr"], weight_decay=cfg['optim_args']["weight_decay"]) # TODO: SGD for FL?
