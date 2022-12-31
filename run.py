@@ -14,6 +14,8 @@ import configparser
 import json
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, recall_score, precision_score, precision_recall_curve
 from utils.fake_loc_generator import fake_loc_gen
+from utils.usr_emb_clip import usr_emb_clip
+import copy
 
 # load the cfg file
 # cfg = configparser.ConfigParser()
@@ -81,16 +83,28 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
             optimizer.zero_grad()
             with torch.set_grad_enabled(phase == 'train'):
                 # outputs = model(fts, support)
-                outputs = model(graph_seq, graph_seq)
+                outputs = model(graph_seq, epoch, graph_seq)
                 loss = criterion(outputs[idx], lbls[idx])
 
                 _, preds = torch.max(outputs, 1)
 
                 # backward + optimize only if in training phase
                 if phase == 'train':
+                    if cfg['model_args']['loc_dp']:
+                        model_state = model.state_dict() # requires_grad == false with state_dict()
+                        user_emb = copy.deepcopy(model_state['usr_emb.weight'])
                     loss.backward()
                     optimizer.step()
                     scheduler.step()
+                    # clip on the user embedding.
+                    if cfg['model_args']['loc_dp']:
+                        new_user_emb = model_state['usr_emb.weight']
+                        user_emb_upd = new_user_emb - user_emb
+                        user_emb_upd = usr_emb_clip(user_emb_upd, cfg['model_args']['loc_clip'])
+                        user_emb = user_emb + user_emb_upd
+                        model_state['usr_emb.weight'] = user_emb
+                        model.load_state_dict(model_state) # TODO: this code may be redundant.
+                        # user_emb = new_user_emb
 
             # Eval metrics estimation.
             prob = F.softmax(outputs, dim=1).cpu().detach()

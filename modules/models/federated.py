@@ -3,6 +3,7 @@ import torch.nn as nn
 # import pytorch_lightning as pl
 # from modules import base_models
 from . import base_models
+from modules.utils.clients_dp import Dp_Agg
 
 class ClientModel(nn.Module):
     def __init__(self):
@@ -14,7 +15,7 @@ class ClientModel(nn.Module):
 
     
 class MultiScaleFedGNN(nn.Module):
-    def __init__(self, usr_num, usr_dim=32, loc_dim_1=64, loc_dim_2=64, usr_dim1=32, usr_dim2=16, rnn_lay_num=2, class_num=2, **kwargs):
+    def __init__(self, usr_num, usr_dim=32, loc_dim_1=64, loc_dim_2=64, usr_dim1=32, usr_dim2=16, rnn_lay_num=2, class_num=2, **model_args):
         super().__init__()
         self.usr_num = usr_num
         # init user embedding
@@ -25,20 +26,27 @@ class MultiScaleFedGNN(nn.Module):
         # define the convolutional layer
         self.server_loc_agg = base_models.Hcov_node2edge()
         # self.server_loc_gcn = getattr(base_models, 'GCN')(loc_dim_1, 64, loc_dim_2)
+        if model_args['loc_dp']:
+            self.agg_dp = Dp_Agg(model_args['loc_eps'], model_args['loc_delt'], model_args['loc_clip'])
+            self.fake_locs = model_args['fake_locs']
+            self.real_locs = model_args['real_locs']
         self.clients_usr_agg = base_models.Hcov_edge2node(usr_dim, usr_dim1)
         self.clients_rnn = getattr(base_models, 'LSTM')(usr_dim1, usr_dim2, rnn_lay_num, bias=True, batch_first=False, dropout=0.2)
         self.output_layer = nn.Linear(usr_dim2 , class_num)
+
     # TODO: emphasize that we add noise on the updated values of usr embedding.
     # TODO: notice that we can add noise to the xxx
-    def forward(self, hyperedge_seq, loc_graph_idx=None):
+    def forward(self, hyperedge_seq, epoch, loc_graph_idx=None):
         # usr emb add noise
         # out = self.usr_emb(range(self.usr_num))
         usr_input = self.usr_emb.weight
         outseq = None
         # aggregate from node to edge in server
-        for hyperedge_idx in hyperedge_seq:
+        for hyperedge_idx, fake_loc, real_loc in zip(hyperedge_seq, self.fake_locs, self.real_locs):
             # aggregate from neighbor locations
             loc_emb, num_nodes = self.server_loc_agg(usr_input, hyperedge_idx)
+            if self.agg_dp is not None and epoch != 1:
+                loc_emb = self.agg_dp(loc_emb, fake_loc, real_loc)
             # aggregate from edge to node in clients
             usr_emb = self.clients_usr_agg(loc_emb, num_nodes, hyperedge_idx)
             usr_emb = usr_emb.unsqueeze(0)
