@@ -3,13 +3,11 @@
   {
     "debug": false,
     "tensorboard": true
-
   },
   "env_args":
   {
     "train_ratio": 0.4,
     "simulation_days": 20
-
   },
   "model_args":
   {
