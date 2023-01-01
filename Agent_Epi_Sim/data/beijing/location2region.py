@@ -10,7 +10,7 @@ regions = shapefile.Reader('./raw_data/beijing-WGS/ST_R_CN_WGS.shp', encoding='l
 loc2region = {}
 
 
-def region_map(poi_locs):
+def region_map(outline, poi_locs):
     pid = poi_locs[0]
     coord = poi_locs[1]
     if contains_xy(outline, *coord):
@@ -23,7 +23,7 @@ for region in tqdm(regions.iterShapeRecords(), total=len(regions)):
     record = region.record
     pool = Pool(processes=230)
     for pid, coord in poi_locs.items():
-        pool.apply_async(region_map, args=((pid, coord)))
+        pool.apply_async(region_map, args=(outline, (pid, coord)))
     pool.close()
     pool.join()
 
