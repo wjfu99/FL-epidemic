@@ -11,8 +11,7 @@ def region_map(region):
     for pid, coord in poi_locs.items():
         if contains_xy(outline, *coord):
             locs.append(pid)
-    return locs
-    return None
+    return {rid: locs}
 
 regions = shapefile.Reader('./raw_data/beijing-WGS/ST_R_CN_WGS.shp', encoding='latin1')
 # shapeRecs = r.shapeRecords()
@@ -23,12 +22,25 @@ for region in tqdm(regions.iterShapeRecords(), total=len(regions)):
     outline = geometry.shape(region.shape)
     new_regions.append([record['QH_CODE'], outline])
 loc2region = {}
-pool = Pool(processes=1)
+pool = Pool(processes=200)
 # for region in tqdm(regions.iterShapeRecords(), total=len(regions)):
-region2loc = tqdm(pool.imap(region_map, new_regions), total=6633)
+region2loc_l = list(tqdm(pool.imap(region_map, new_regions), total=len(new_regions))) # list here is very important.
 # pool.map(region_map, new_regions)
 pool.close()
 pool.join()
+region2loc = {}
+loc2region = {}
+for region in region2loc_l:
+    region2loc.update(region)
+    # for rid, locs in region:
+    rid = list(region.keys())[0]
+    locs = list(region.values())[0]
+    for loc in locs:
+        loc2region[loc] = rid
+np.save("./processed_data/region2poi_loc.npy", region2loc)
+np.save("./processed_data/poi_loc2region.npy", loc2region)
+
+
 
 
 ################ For test the unique id of the shp file ###########
