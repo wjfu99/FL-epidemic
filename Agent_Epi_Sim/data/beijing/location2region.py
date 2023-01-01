@@ -22,10 +22,10 @@ for region in tqdm(regions.iterShapeRecords(), total=len(regions)):
     outline = geometry.shape(region.shape)
     record = region.record
     pool = Pool(processes=230)
-    in_region = list(pool.imap(region_map, poi_locs.items()))
+    for pid, coord in poi_locs.items():
+        pool.apply_async(region_map, args=((pid, coord)))
     pool.close()
     pool.join()
-    in_region = set(in_region)
 
 
 ################ For test the unique id of the shp file ###########
