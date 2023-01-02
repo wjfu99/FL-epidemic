@@ -4,7 +4,7 @@ from shapely import geometry, contains_xy
 from tqdm import tqdm
 from multiprocessing import Pool
 def region_map(region):
-    poi_locs = np.load('./processed_data/poi_loc.npy', allow_pickle=True).item()
+    poi_locs = np.load('./processed_data/poi_loc_wgs84.npy', allow_pickle=True).item()
     outline = region[1]
     rid = region[0]
     locs = []
@@ -37,8 +37,8 @@ for region in region2loc_l:
     locs = list(region.values())[0]
     for loc in locs:
         loc2region[loc] = rid
-np.save("./processed_data/region2poi_loc.npy", region2loc)
-np.save("./processed_data/poi_loc2region.npy", loc2region)
+np.save("./processed_data/region2poi_loc(wgs84).npy", region2loc)
+np.save("./processed_data/poi_loc2region(wgs84).npy", loc2region)
 
 
 
