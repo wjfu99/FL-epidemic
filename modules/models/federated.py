@@ -42,10 +42,13 @@ class MultiScaleFedGNN(nn.Module):
         usr_input = self.usr_emb.weight
         outseq = None
         # aggregate from node to edge in server
-        for hyperedge_idx, fake_loc, real_loc in zip(hyperedge_seq, self.fake_locs, self.real_locs):
+        for idx in range(len(hyperedge_seq)):
+            hyperedge_idx = hyperedge_seq[idx]
             # aggregate from neighbor locations
             loc_emb, num_nodes = self.server_loc_agg(usr_input, hyperedge_idx)
-            if self.agg_dp is not None and epoch != 1:
+            if hasattr(self, 'agg_dp') and epoch != 1:
+                fake_loc = self.fake_locs[idx]
+                real_loc = self.real_locs[idx]
                 loc_emb = self.agg_dp(loc_emb, fake_loc, real_loc)
             # aggregate from edge to node in clients
             usr_emb = self.clients_usr_agg(loc_emb, num_nodes, hyperedge_idx)

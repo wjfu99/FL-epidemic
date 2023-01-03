@@ -57,9 +57,10 @@ idx_test = np.array(range(train_num, sample_num))
 # Generate the hypergraph sequence
 graph_seq = hypergraph_sequence_generator(traj[:, :20*48], seq_num=20, device=device)
 
-# Fake location generation
-real_locs, fake_locs = fake_loc_gen(traj[:, :20*48], seq_num=20)
-cfg['model_args']['real_locs'], cfg['model_args']['fake_locs'] = real_locs, fake_locs
+# Fake location generation 
+if model_args['loc_dp']:
+    real_locs, fake_locs = fake_loc_gen(traj[:, :20*48], seq_num=20)
+    cfg['model_args']['real_locs'], cfg['model_args']['fake_locs'] = real_locs, fake_locs
 model = MultiScaleFedGNN(usr_num=usr_num, **cfg['model_args']).to(device)
 summary(model)
 criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor([1, 1]).to(device))
