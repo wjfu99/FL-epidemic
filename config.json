@@ -3,7 +3,7 @@
   {
     "debug": false,
     "tensorboard": true,
-    "tsboard_comm": "test"
+    "tsboard_comm": "reproduction"
   },
   "env_args":
   {
@@ -12,11 +12,11 @@
   },
   "model_args":
   {
-    "loc_dp": true,
+    "loc_dp": false,
     "loc_eps": 1,
     "loc_delt": 0.01,
     "loc_clip": 0.1,
-    "fl_dp": true,
+    "fl_dp": false,
     "fl_eps": 1,
     "fl_delt": 0.01,
     "fl_clip": 0.1
