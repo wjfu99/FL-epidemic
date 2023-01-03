@@ -69,12 +69,19 @@ def traj_covert(a2d):
 # TODO: 需要处理某些用户访问的轨迹在POI信息列表里找不到的问题。
 def data_process_save(all_dict, poi_id):
     a1_d = {}
+    reg_id = {}
+    idx = 0
     for u in tqdm(all_dict):
         a1_d[u] = {}
         for j in all_dict[u]:
             assert all_dict[u][j] != -1
             if str(all_dict[u][j]) in poi_id:
-                a1_d[u][j] = int(poi_id[str(all_dict[u][j])])
+                if int(poi_id[str(all_dict[u][j])]) in reg_id:
+                    a1_d[u][j] = reg_id[int(poi_id[str(all_dict[u][j])])]
+                else:
+                    reg_id[int(poi_id[str(all_dict[u][j])])] = idx
+                    a1_d[u][j] = reg_id[int(poi_id[str(all_dict[u][j])])]
+                    idx += 1
             else:
                 nopoi.add(all_dict[u][j])
     a2d = {}
@@ -82,8 +89,10 @@ def data_process_save(all_dict, poi_id):
         a2d[i] = {}
         a2d[i]['trace'] = list(a1_d[i].values())
     traj_mat = traj_covert(a2d)
+    np.save('./processed_data/reg_id(filled).npy', reg_id)
     np.save('./processed_data/ori_data(filled).npy', a2d)
     np.save('./processed_data/traj_mat(filled).npy', traj_mat)
+    return a2d, traj_mat
 
 nopoi = set()
 def main():
@@ -101,7 +110,8 @@ def main():
     locations, trace_array, poi_id = traj_count_poi(all_dict)
     # 新增的poi_区域聚合之后的id
     poi_id = np.load("./processed_data/poi_loc2region(wgs84).npy", allow_pickle=True).item()
-    data_process_save(all_dict, poi_id)
+    a2d, traj_mat = data_process_save(all_dict, poi_id)
+
 
 
 if __name__ == "__main__":
