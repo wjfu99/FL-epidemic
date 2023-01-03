@@ -32,7 +32,7 @@ def map_user_dict(start_time, end_time, first, last, user_traj):
         if first[idx] < start_time and last[idx] > end_time:
             user_dict[u] = user_traj[u]
             for time in list(user_dict[u].keys()):
-                if time < start_time or time > end_time:
+                if time < start_time or time >= end_time:
                     user_dict[u].pop(time)
     return user_dict
 
