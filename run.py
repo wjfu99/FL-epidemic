@@ -14,7 +14,7 @@ import configparser
 import json
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, recall_score, precision_score, precision_recall_curve
 from utils.fake_loc_generator import fake_loc_gen
-from utils.usr_emb_clip import usr_emb_clip
+from utils.dp_lib import usr_emb_clip, fl_dp
 import copy
 
 # load the cfg file
@@ -105,6 +105,9 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
                         model_state['usr_emb.weight'] = user_emb
                         model.load_state_dict(model_state) # TODO: this code may be redundant.
                         # user_emb = new_user_emb
+                    # Add noise on the updated parameters.
+                    if cfg['model_args']['fl_dp']:
+                        fl_dp(model, optimizer, **cfg['model_args'])
 
             # Eval metrics estimation.
             prob = F.softmax(outputs, dim=1).cpu().detach()
