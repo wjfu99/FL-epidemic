@@ -23,6 +23,10 @@ from datetime import datetime
 # cfg.read('cfg.ini')
 with open("config.json", 'r') as f:
     cfg = json.load(f)
+fun_args, env_args, model_args, optim_args\
+    = cfg['fun_args'], cfg['env_args'], cfg['model_args'], cfg['optim_args']
+
+current_time = datetime.now()
 
 # For more specific debugging results.
 if cfg['fun_args']["debug"]:
@@ -31,7 +35,8 @@ if cfg['fun_args']["debug"]:
 else:
     # Define the default GPU device
     device = torch.device("cuda:1")
-
+if fun_args['tensorboard']:
+    writer = SummaryWriter(log_dir='./runs/'+cfg['fun_args']['tsboard_comm']+current_time.strftime('%m-%d %H:%M'))
 
 # Process the epidemic data.
 # a = eng.get_traj_mat
@@ -61,8 +66,7 @@ criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor([1, 1]).to(device
 optimizer = optim.Adam(model.parameters(), lr=cfg['optim_args']["lr"], weight_decay=cfg['optim_args']["weight_decay"]) # TODO: SGD for FL?
 schedular = optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg['optim_args']["milestones"], gamma=cfg['optim_args']['gamma'])
 
-current_time = datetime.now()
-writer = SummaryWriter(log_dir='./runs/'+cfg['fun_args']['tsboard_comm']+current_time.strftime('%m-%d %H:%M'))
+
 
 
 def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=10):
@@ -135,12 +139,14 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
         if phase == 'val':
             loss_val.append(epoch_loss)
             # Training process visualization.
-            writer.add_scalars('loss', {
-                'train_loss': epoch_loss,
-                'eval_loss': epoch_loss
-            }, epoch)
-            writer.add_pr_curve('pr_curve'+str(epoch), lbls[idx].cpu(), prob[idx, 1])
-    writer.close()
+            if fun_args['tensorboard']:
+                writer.add_scalars('loss', {
+                    'train_loss': epoch_loss,
+                    'eval_loss': epoch_loss
+                }, epoch)
+                writer.add_pr_curve('pr_curve'+str(epoch), lbls[idx].cpu(), prob[idx, 1])
+    if fun_args['tensorboard']:
+        writer.close()
 
 # if __name__ == "__main__":
 
