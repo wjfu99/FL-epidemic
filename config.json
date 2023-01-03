@@ -2,7 +2,8 @@
   "fun_args":
   {
     "debug": false,
-    "tensorboard": true
+    "tensorboard": true,
+    "tsboard_comm": "test"
   },
   "env_args":
   {

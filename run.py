@@ -16,6 +16,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, recall_scor
 from utils.fake_loc_generator import fake_loc_gen
 from utils.dp_lib import usr_emb_clip, fl_dp
 import copy
+from datetime import datetime
 
 # load the cfg file
 # cfg = configparser.ConfigParser()
@@ -60,7 +61,8 @@ criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor([1, 1]).to(device
 optimizer = optim.Adam(model.parameters(), lr=cfg['optim_args']["lr"], weight_decay=cfg['optim_args']["weight_decay"]) # TODO: SGD for FL?
 schedular = optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg['optim_args']["milestones"], gamma=cfg['optim_args']['gamma'])
 
-writer = SummaryWriter()
+current_time = datetime.now()
+writer = SummaryWriter(log_dir='./runs/'+cfg['fun_args']['tsboard_comm']+current_time.strftime('%m-%d %H:%M'))
 
 
 def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=10):
