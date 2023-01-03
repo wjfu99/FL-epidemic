@@ -35,7 +35,7 @@ def filter_and_map(usd,all_poi):
                 c = c
             else:
                 c = c+1
-        if c==0:
+        if c==0: #如果用户存在poi集合里面找不到的poi那么就删掉这条轨迹。
             apa[us]=usd[us]
     return apa
 
