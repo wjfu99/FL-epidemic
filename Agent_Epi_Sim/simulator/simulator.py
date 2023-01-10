@@ -7,18 +7,6 @@ from collections import Counter
 from tqdm import tqdm
 
 
-def usr_dynamic(usr_list):
-    for usr in usr_list:
-        if usr.state == 'S':
-            if random.uniform(0, 1) < 0.01 * usr.position.get_loc_force:
-                usr.state = 'E'
-        elif usr.state == 'E':
-            if random.uniform(0, 1) < 0.01:
-                usr.state = 'I'
-        elif usr.state == 'I':
-            if random.uniform(0, 1) < 0.01:
-                usr.state = 'R'
-
 class Individual:
     def __init__(self, uid, traj):
         self.residence = None
@@ -174,21 +162,32 @@ class Engine:
         :return:
         """
 
-    def next(self, step_num=1, dynamic_mode="poi_shared"):
+    def next(self, step_num=1, dynamic_mode="SIS"):
         for i in tqdm(range(step_num), desc='Simulation Processing'):
             self.refresh()
-            if dynamic_mode == "poi_shared":
-                pool = Pool(20)
-                dict_len = self.get_usr_num // 20
-                process_list = []
-                dict_list = []
+            if dynamic_mode == "SEIR":
                 for usr in self.usr_dic:
                     usr = self.usr_dic[usr]
-                    dict_list.append(usr)
-                    if len(dict_list) >= dict_len:
-                        process_list.append(dict_list)
-                        dict_list = []
-                pool.map(usr_dynamic, process_list)
+                    if usr.state == 'S':
+                        if random.uniform(0, 1) < self.beta * usr.position.get_loc_force:
+                            usr.state = 'E'
+                    elif usr.state == 'E':
+                        if random.uniform(0, 1) < self.eps:
+                            usr.state = 'I'
+                    elif usr.state == 'I':
+                        if random.uniform(0, 1) < self.mu:
+                            usr.state = 'R'
+
+            elif dynamic_mode == "SIS":
+                for usr in self.usr_dic:
+                    usr = self.usr_dic[usr]
+                    if usr.state == 'S':
+                        if random.uniform(0, 1) < self.beta * usr.position.get_loc_force:
+                            usr.state = 'I'
+                    elif usr.state == 'I':
+                        if random.uniform(0, 1) < self.mu:
+                            usr.state = 'S'
+                print(self.get_state_count)
             self.time_indi += 1
 
     @staticmethod
