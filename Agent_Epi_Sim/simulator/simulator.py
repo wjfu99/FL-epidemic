@@ -161,22 +161,27 @@ class Engine:
         get infected sample, for model training/isolated
         :return:
         """
+    def usr_dynamic(self, usr):
+        if usr.state == 'S':
+            if random.uniform(0, 1) < self.beta * usr.position.get_loc_force:
+                usr.state = 'E'
+        elif usr.state == 'E':
+            if random.uniform(0, 1) < self.eps:
+                usr.state = 'I'
+        elif usr.state == 'I':
+            if random.uniform(0, 1) < self.mu:
+                usr.state = 'R'
 
     def next(self, step_num=1, dynamic_mode="poi_shared"):
         for i in tqdm(range(step_num), desc='Simulation Processing'):
             self.refresh()
+            pool = Pool(20)
             if dynamic_mode == "poi_shared":
                 for usr in self.usr_dic:
                     usr = self.usr_dic[usr]
-                    if usr.state == 'S':
-                        if random.uniform(0, 1) < self.beta * usr.position.get_loc_force:
-                            usr.state = 'E'
-                    elif usr.state == 'E':
-                        if random.uniform(0, 1) < self.eps:
-                            usr.state = 'I'
-                    elif usr.state == 'I':
-                        if random.uniform(0, 1) < self.mu:
-                            usr.state = 'R'
+                    pool.apply_async(usr)
+                pool.close()
+                pool.join()
             self.time_indi += 1
 
     @staticmethod
