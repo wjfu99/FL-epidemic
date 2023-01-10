@@ -33,7 +33,7 @@ class MultiScaleFedGNN(nn.Module):
             self.fake_locs = model_args['fake_locs']
             self.real_locs = model_args['real_locs']
         self.clients_rnn = getattr(base_models, 'LSTM')(usr_dim1, usr_dim2, rnn_lay_num, bias=True, batch_first=False, dropout=0.2)
-        self.output_layer = nn.Linear(32, class_num)
+        self.output_layer = nn.Linear(usr_dim2, class_num)
 
     # TODO: emphasize that we add noise on the updated values of usr embedding.
     # TODO: notice that we can add noise to the xxx
@@ -65,8 +65,8 @@ class MultiScaleFedGNN(nn.Module):
                 outseq = torch.cat((outseq, usr_emb), dim=0)
 
         # process with RNN-based model
-        # out, (h, c) = self.clients_rnn(outseq)
-        out = self.output_layer(outseq[-1, :, :]) #Utilize the last output of RNN for prediction.
+        out, (h, c) = self.clients_rnn(outseq)
+        out = self.output_layer(out[-1, :, :]) #Utilize the last output of RNN for prediction.
         return out
 #
 # class RNN(torch.nn.Module):
