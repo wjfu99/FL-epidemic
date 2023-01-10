@@ -4,6 +4,7 @@ from multiprocessing import Pool, cpu_count
 import random, datetime
 # from time import date
 from collections import Counter
+from tqdm import tqdm
 
 
 class Individual:
@@ -19,10 +20,11 @@ class Individual:
         # for i in range(self.traj.shape[0]):
         locs, time = np.unique(self.traj, return_counts=True)
         freq = dict(zip(locs, time))
+        freq.pop(-1, None)
         # for debug
         self.info.append(freq)
-        freq = sorted(freq.items(), key=lambda x:x[1], reverse=True)
-        self.residence = freq[1][1]
+        freq = sorted(freq.items(), key=lambda x: x[1], reverse=True)
+        self.residence = freq[0][0]
         # asure valid residence
         assert self.residence != -1
 
@@ -161,13 +163,13 @@ class Engine:
         """
 
     def next(self, step_num=1, dynamic_mode="poi_shared"):
-        for i in range(step_num):
+        for i in tqdm(range(step_num), desc='Simulation Processing'):
             self.refresh()
             if dynamic_mode == "poi_shared":
                 for usr in self.usr_dic:
                     usr = self.usr_dic[usr]
                     if usr.state == 'S':
-                        if random.uniform(0, 1) < self.beta * usr.position.get_loc_force*1000000:
+                        if random.uniform(0, 1) < self.beta * usr.position.get_loc_force:
                             usr.state = 'E'
                     elif usr.state == 'E':
                         if random.uniform(0, 1) < self.eps:

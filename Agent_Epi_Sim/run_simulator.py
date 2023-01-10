@@ -14,7 +14,7 @@ parser.add_argument("--init_mode", type=str, help="initialized infected case rat
 args = parser.parse_args()
 args.time_granularity = datetime.timedelta(hours=args.time_granularity)
 
-traj = np.load("./data/beijing/processed_data/traj_mat.npy")
+traj = np.load("./data/beijing/processed_data/traj_mat(filled).npy")
 eng = Engine(**vars(args))
 eng.load_traj(traj)
 eng.init_epi(args.init_mode, args.init_ratio)
