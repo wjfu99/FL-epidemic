@@ -3,12 +3,13 @@
   {
     "debug": false,
     "tensorboard": true,
-    "tsboard_comm": "reproduction"
+    "tsboard_comm": "old_data"
   },
   "env_args":
   {
     "train_ratio": 0.4,
-    "simulation_days": 20
+    "simulation_days": 20,
+    "old_data": true
   },
   "model_args":
   {
@@ -29,5 +30,4 @@
     "gamma": 0.7,
     "weight_decay": 0
   }
-
 }

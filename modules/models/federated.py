@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 # import pytorch_lightning as pl
 # from modules import base_models
 from . import base_models
@@ -22,17 +23,17 @@ class MultiScaleFedGNN(nn.Module):
         self.usr_emb = nn.Embedding(usr_num, usr_dim)
         # self.usr_emb = nn.Parameter(torch.FloatTensor(usr_num, usr_dim))
         # self.usr_emb = nn.Linear(usr_num, usr_dim)
+
         # create user graph,3 the graph should be as a input to forward.
         # define the convolutional layer
-        self.server_loc_agg = base_models.Hcov_node2edge()
+        self.hyper_convs = nn.ModuleList([base_models.Dp_HypergraphConv(32, 32, **model_args)])
         # self.server_loc_gcn = getattr(base_models, 'GCN')(loc_dim_1, 64, loc_dim_2)
+        self.loc_dp = model_args['loc_dp']
         if model_args['loc_dp']:
-            self.agg_dp = Dp_Agg(model_args['loc_eps'], model_args['loc_delt'], model_args['loc_clip'])
             self.fake_locs = model_args['fake_locs']
             self.real_locs = model_args['real_locs']
-        self.clients_usr_agg = base_models.Hcov_edge2node(usr_dim, usr_dim1)
         self.clients_rnn = getattr(base_models, 'LSTM')(usr_dim1, usr_dim2, rnn_lay_num, bias=True, batch_first=False, dropout=0.2)
-        self.output_layer = nn.Linear(usr_dim2 , class_num)
+        self.output_layer = nn.Linear(32, class_num)
 
     # TODO: emphasize that we add noise on the updated values of usr embedding.
     # TODO: notice that we can add noise to the xxx
@@ -41,26 +42,31 @@ class MultiScaleFedGNN(nn.Module):
         # out = self.usr_emb(range(self.usr_num))
         usr_input = self.usr_emb.weight
         outseq = None
+        x = usr_input
         # aggregate from node to edge in server
         for idx in range(len(hyperedge_seq)):
             hyperedge_idx = hyperedge_seq[idx]
             # aggregate from neighbor locations
-            loc_emb, num_nodes = self.server_loc_agg(usr_input, hyperedge_idx)
-            if hasattr(self, 'agg_dp') and epoch != 1:
-                fake_loc = self.fake_locs[idx]
-                real_loc = self.real_locs[idx]
-                loc_emb = self.agg_dp(loc_emb, fake_loc, real_loc)
-            # aggregate from edge to node in clients
-            usr_emb = self.clients_usr_agg(loc_emb, num_nodes, hyperedge_idx)
-            usr_emb = usr_emb.unsqueeze(0)
+            for hyper_conv in self.hyper_convs:
+                if self.loc_dp:
+                    dp_args = {'fake_loc': self.fake_locs[idx],
+                               'real_loc': self.real_loc[idx],
+                               'epoch': epoch
+                               }
+                else:
+                    dp_args = None
+                x = hyper_conv(x, hyperedge_idx, dp_args=dp_args)
+                x = F.relu(x)
+
+            usr_emb = x.unsqueeze(0)
             if outseq is None:
                 outseq = usr_emb
             else:
                 outseq = torch.cat((outseq, usr_emb), dim=0)
 
         # process with RNN-based model
-        out, (h, c) = self.clients_rnn(outseq)
-        out = self.output_layer(out[-1, :, :]) #Utilize the last output of RNN for prediction.
+        # out, (h, c) = self.clients_rnn(outseq)
+        out = self.output_layer(outseq[-1, :, :]) #Utilize the last output of RNN for prediction.
         return out
 #
 # class RNN(torch.nn.Module):

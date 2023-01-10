@@ -16,4 +16,13 @@ def hypergraph_sequence_generator(traj, seq_num, device):
     hyperedge_index_seq = [torch.tensor(hypergraph_generator(i)).to(device) for i in trajs]
     return hyperedge_index_seq
 
+def hypergraph2hyperindex(hypergraph,device):
+    hyperedge_index = [[], []]
+    for edge_idx in range(hypergraph.shape[1]):
+        node = np.argwhere(hypergraph[:, edge_idx]!=0)
+        hyperedge_index[0].extend(np.squeeze(node))
+        hyperedge_index[1].extend([edge_idx for _ in range(len(node))])
+    hyperedge_index = np.array(hyperedge_index)
+    hyperedge_index = torch.tensor(hyperedge_index).to(device)
+    return hyperedge_index
 
