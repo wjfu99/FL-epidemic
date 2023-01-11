@@ -5,7 +5,8 @@ def hypergraph_generator(traj):
     hyperedge_index = [[], []]
     for uid, usr in enumerate(traj):
         loc = list(np.unique(usr))
-        loc.remove(-1)
+        if -1 in loc:
+            loc.remove(-1)
         hyperedge_index[0].extend([uid for i in range(len(loc))])
         hyperedge_index[1].extend(loc)
     hyperedge_index = np.array(hyperedge_index)

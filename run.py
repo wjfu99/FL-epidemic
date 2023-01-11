@@ -51,7 +51,7 @@ elif env_args['dataset'] == 'first_edition':
     lbls = eng.get_usr_states
     lbls = torch.tensor(label_generator(lbls)).to(device)
 elif env_args['dataset'] == 'large':
-    traj = np.load(".Agent_Epi_Sim/data/beijing/processed_data/traj_mat(filled).npy")
+    traj = np.load("./Agent_Epi_Sim/data/beijing/processed_data/traj_mat(filled).npy")
     usr_num = traj.shape[0]
     lbls = np.load('../HGNN-Epidemic/bj-sim/privacy/label.npy')
     lbls = torch.tensor(lbls).to(device).squeeze()
