@@ -133,7 +133,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
             prob = F.softmax(outputs, dim=1).cpu().detach()
             precision, recall, thresholds = precision_recall_curve(lbls[idx].cpu(),
                                                                    prob[idx, 1])
-            fscore = (2 * precision * recall) / (precision + recall)  # calculate the f1 score
+            fscore = (2 * precision * recall) / (precision + recall + 10e-6)  # calculate the f1 score
             epoch_f1 = fscore.max()
             max_f1_index = np.argmax(epoch_f1)
             threshold = thresholds[max_f1_index]
