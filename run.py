@@ -39,18 +39,22 @@ if fun_args['tensorboard']:
     writer = SummaryWriter(log_dir='./runs/'+cfg['fun_args']['tsboard_comm']+current_time.strftime('%m-%d %H:%M'))
 
 # Process the epidemic data.
-if env_args['old_data']:
+if env_args['dataset'] == 'old_data':
     traj = np.load('../HGNN-Epidemic/bj-sim/privacy/noposterior/trace_array.npy')
     usr_num = traj.shape[0]
     lbls = np.load('../HGNN-Epidemic/bj-sim/privacy/label.npy')
     lbls = torch.tensor(lbls).to(device).squeeze()
-else:
+elif env_args['dataset'] == 'first_edition':
     traj = eng.get_traj_mat
     usr_num = eng.get_usr_num
-    eng.next(20*48)
-    eng.next(48)
+    eng.next(env_args['sim_days']*48)
     lbls = eng.get_usr_states
     lbls = torch.tensor(label_generator(lbls)).to(device)
+elif env_args['dataset'] == 'large':
+    traj = np.load(".Agent_Epi_Sim/data/beijing/processed_data/traj_mat(filled).npy")
+    usr_num = traj.shape[0]
+    lbls = np.load('../HGNN-Epidemic/bj-sim/privacy/label.npy')
+    lbls = torch.tensor(lbls).to(device).squeeze()
 
 train_ratio = cfg['env_args']['train_ratio']
 sample_num = lbls.shape[0]
@@ -60,13 +64,13 @@ idx_test = np.array(range(train_num, sample_num))
 
 
 # Generate the hypergraph sequence
-graph_seq = hypergraph_sequence_generator(traj[:, :40*48], seq_num=1, device=device)
+graph_seq = hypergraph_sequence_generator(traj[:, :env_args['sim_days']*48], seq_num=env_args['seq_num'], device=device)
 # H = np.load('../HGNN-Epidemic/bj-sim/privacy/noposterior/H_un=10_rm01=True.npy')
 # graph_seq = [hypergraph2hyperindex(H, device)]
 
 # Fake location generation 
 if model_args['loc_dp']:
-    real_locs, fake_locs = fake_loc_gen(traj[:, :20*48], seq_num=20)
+    real_locs, fake_locs = fake_loc_gen(traj[:, :env_args['sim_days']*48], seq_num=env_args['seq_num'])
     cfg['model_args']['real_locs'], cfg['model_args']['fake_locs'] = real_locs, fake_locs
 model = MultiScaleFedGNN(usr_num=usr_num, **cfg['model_args']).to(device)
 summary(model)
