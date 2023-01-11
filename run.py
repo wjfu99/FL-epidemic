@@ -76,7 +76,7 @@ if model_args['loc_dp']:
     cfg['model_args']['real_locs'], cfg['model_args']['fake_locs'] = real_locs, fake_locs
 model = MultiScaleFedGNN(usr_num=usr_num, **cfg['model_args']).to(device)
 summary(model)
-criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor([1, 1]).to(device))
+criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor([1, 5]).to(device))
 optimizer = optim.Adam(model.parameters(), lr=cfg['optim_args']["lr"], weight_decay=cfg['optim_args']["weight_decay"]) # TODO: SGD for FL?
 schedular = optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg['optim_args']["milestones"], gamma=cfg['optim_args']['gamma'])
 

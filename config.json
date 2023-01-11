@@ -3,13 +3,13 @@
   {
     "debug": false,
     "tensorboard": true,
-    "tsboard_comm": "old_data"
+    "tsboard_comm": "large"
   },
   "env_args":
   {
     "train_ratio": 0.4,
     "sim_days": 20,
-    "seq_num": 20,
+    "seq_num": 1,
     "dataset": "large"
   },
   "model_args":
