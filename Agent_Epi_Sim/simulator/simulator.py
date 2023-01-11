@@ -162,7 +162,7 @@ class Engine:
         :return:
         """
 
-    def next(self, step_num=1, dynamic_mode="SIS"):
+    def next(self, step_num=1, dynamic_mode="SIR"):
         for i in tqdm(range(step_num), desc='Simulation Processing'):
             self.refresh()
             if dynamic_mode == "SEIR":
@@ -187,6 +187,16 @@ class Engine:
                     elif usr.state == 'I':
                         if random.uniform(0, 1) < self.mu:
                             usr.state = 'S'
+
+            elif dynamic_mode == "SIR":
+                for usr in self.usr_dic:
+                    usr = self.usr_dic[usr]
+                    if usr.state == 'S':
+                        if random.uniform(0, 1) < self.beta * usr.position.get_loc_force:
+                            usr.state = 'I'
+                    elif usr.state == 'I':
+                        if random.uniform(0, 1) < self.mu:
+                            usr.state = 'R'
                 print(self.get_state_count)
             self.time_indi += 1
 
