@@ -17,6 +17,7 @@ from utils.fake_loc_generator import fake_loc_gen
 from utils.dp_lib import usr_emb_clip, fl_dp
 import copy
 from datetime import datetime
+import joblib
 
 # load the cfg file
 # cfg = configparser.ConfigParser()
@@ -53,7 +54,8 @@ elif env_args['dataset'] == 'first_edition':
 elif env_args['dataset'] == 'large':
     traj = np.load("./Agent_Epi_Sim/data/beijing/processed_data/traj_mat(filled).npy")
     usr_num = traj.shape[0]
-    lbls = np.load('../HGNN-Epidemic/bj-sim/privacy/label.npy')
+    lbls = joblib.load('./Agent_Epi_Sim/label')  # TODO the label file should be moved.
+    lbls = label_generator(lbls)
     lbls = torch.tensor(lbls).to(device).squeeze()
 
 train_ratio = cfg['env_args']['train_ratio']
