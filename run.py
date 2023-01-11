@@ -158,7 +158,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
                     'train_loss': epoch_loss,
                     'eval_loss': epoch_loss
                 }, epoch)
-                writer.add_pr_curve('pr_curve'+str(epoch), lbls[idx].cpu(), prob[idx, 1])
+                writer.add_pr_curve('pr_curve', lbls[idx].cpu(), prob[idx, 1], epoch)
     if fun_args['tensorboard']:
         writer.close()
 
