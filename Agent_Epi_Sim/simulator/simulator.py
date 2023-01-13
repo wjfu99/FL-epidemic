@@ -66,7 +66,7 @@ class Location:
     def get_loc_force(self):
         if self.lid != -1:
             state_cnt = self.get_state_count
-            return state_cnt['I']/state_cnt['S']
+            return state_cnt['I']/self.get_cur_count
         else:
             return 0
 
@@ -197,7 +197,7 @@ class Engine:
                     elif usr.state == 'I':
                         if random.uniform(0, 1) < self.mu:
                             usr.state = 'R'
-                print(self.get_state_count)
+                # print(self.get_state_count)
             self.time_indi += 1
 
     @staticmethod
