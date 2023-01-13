@@ -2,7 +2,7 @@ import numpy as np
 # from modules.models import MultiScaleFedGNN
 from modules import MultiScaleFedGNN
 # import modules
-from Agent_Epi_Sim import eng
+from Agent_Epi_Sim import Engine
 from utils import hypergraph_generator, hypergraph_sequence_generator, label_generator, hypergraph2hyperindex
 import torch
 import torch.optim as optim
@@ -54,7 +54,17 @@ elif env_args['dataset'] == 'first_edition':
 elif env_args['dataset'] == 'large':
     traj = np.load("./Agent_Epi_Sim/data/beijing/processed_data/traj_mat(filled).npy")
     usr_num = traj.shape[0]
-    lbls = joblib.load('./Agent_Epi_Sim/label')  # TODO the label file should be moved.
+    # lbls = joblib.load('./datasets/beijing/large-filled/label')  # TODO the label file should be moved.
+    # lbls = label_generator(lbls)
+    # generate with old version simulator.
+    lbls = np.load('./data/label.npy')
+    lbls = torch.tensor(lbls).to(device).squeeze()
+elif env_args['dataset'] == 'small':
+    # traj = np.load("./Agent_Epi_Sim/data/beijing/processed_data/traj_mat.npy")
+    traj = np.load('../HGNN-Epidemic/bj-sim/privacy/noposterior/trace_array.npy')
+    # traj = joblib.load('./datasets/beijing/small-unfilled/eng(small)')
+    usr_num = traj.shape[0]
+    lbls = joblib.load('./datasets/beijing/small-unfilled/label(small)')  # TODO the label file should be moved.
     lbls = label_generator(lbls)
     lbls = torch.tensor(lbls).to(device).squeeze()
 
