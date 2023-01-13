@@ -130,7 +130,7 @@ def main():
         Mu = 0.0029745672532136558
         Beta = 0.019132277144042642
     ratio = 0.02
-    user_info = np.load('./processed_data/ori_data.npy', allow_pickle=True).item()
+    user_info = np.load('./processed_data/ori_data_old.npy', allow_pickle=True).item()
     # for i in range(44000):
     #     user_info.pop(random.choice(user_info.keys()))
     # for key in random.sample(user_info.keys(), 44000):
