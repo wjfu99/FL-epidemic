@@ -9,32 +9,35 @@ def hypergraph_generator(traj, unique_len=None):
             loc = list(np.unique(usr))
             if -1 in loc:
                 loc.remove(-1)
-            hyperedge_index[0].extend([uid for i in range(unique_num(loc))])
+            hyperedge_index[0].extend([uid for i in range(len(loc))])
             hyperedge_index[1].extend(loc)
     else:
-        locs = list(np.unique(traj))
-        if -1 in locs:
-            locs.remove(-1)
         # loc_num = loc.max()
         assert traj.shape[1] % unique_len ==0
         unique_num = traj.shape[1] // unique_len
+        hyperedge2st = {}
+        edge_idx = 0
         for t_idx in tqdm(range(unique_num)):
             traj_intv = traj[:, t_idx*unique_len:(t_idx+1)*unique_len]
-            for loc in locs:
-                same = np.argwhere(traj_intv == loc)
-                same = same[:, 0]
-                same = np.unique(same)
-                hyperedge_index[0].extend(list(same))
-                hyperedge_index[1].extend([loc for i in range(len(list(same)))])
-
-
-
+            for usr in range(traj.shape[0]):
+                usr_locs = list(set(traj_intv[usr]))
+                if -1 in usr_locs:
+                    usr_locs.remove(-1)
+                for usr_loc in usr_locs:
+                    if (usr_loc, t_idx) in hyperedge2st:
+                        usr_edge_idx = hyperedge2st[(usr_loc, t_idx)]
+                    else:
+                        hyperedge2st[(usr_loc, t_idx)] = edge_idx
+                        usr_edge_idx = edge_idx
+                        edge_idx += 1
+                    hyperedge_index[0].append(usr)
+                    hyperedge_index[1].append(usr_edge_idx)
     hyperedge_index = np.array(hyperedge_index)
     return hyperedge_index
 
 def hypergraph_sequence_generator(traj, seq_num, device):
     trajs = np.split(traj, seq_num, axis=1)
-    hyperedge_index_seq = [torch.tensor(hypergraph_generator(i, unique_len=2)).to(device) for i in trajs]
+    hyperedge_index_seq = [torch.tensor(hypergraph_generator(i, unique_len=48)).to(device) for i in trajs]
     return hyperedge_index_seq
 
 def hypergraph2hyperindex(hypergraph,device):
