@@ -8,7 +8,7 @@
   "env_args":
   {
     "train_ratio": 0.4,
-    "sim_days": 20,
+    "sim_days": 15,
     "seq_num": 1,
     "dataset": "large"
   },

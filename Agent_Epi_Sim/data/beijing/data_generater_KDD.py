@@ -120,11 +120,13 @@ def main():
     # Region_num = 661
     #聚合前区域个数
     Region_num = 3800
-    parameters = 'primitive'
+    parameters = 'Omicron'
     if parameters == 'Omicron':
         # Omicron
-        Mu = 0.0030639024815920513
-        Beta = 0.058656271323618725
+        # Mu = 0.0030639024815920513
+        # Beta = 0.058656271323618725
+        Mu = 0.071 / 48
+        Beta = 0.766 / 48
     elif parameters == 'primitive':
         # primitive
         # Mu = 0.0029745672532136558
@@ -135,6 +137,7 @@ def main():
     ratio = 0.0001
     # user_info = np.load('./processed_data/ori_data_old.npy', allow_pickle=True).item()
     trajs = np.load('../beijing/processed_data/traj_mat(filled).npy')
+    trajs = trajs[:, :15*48]
     user_info = {}
     for idx, traj in enumerate(trajs):
         user_info[idx] = {'trace': traj}
