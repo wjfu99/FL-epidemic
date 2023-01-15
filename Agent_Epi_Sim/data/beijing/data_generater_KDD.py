@@ -121,7 +121,7 @@ def main():
     #聚合前区域个数
     Region_num = 3800
     Region_num = 36431
-    parameters = 'Omicron'
+    parameters = 'primitive'
     if parameters == 'Omicron':
         # Omicron
         # Mu = 0.0030639024815920513
@@ -134,12 +134,13 @@ def main():
         # Beta = 0.019132277144042642
         # 下面的是在大尺度下的感染率
         Mu = 0.071/48
-        Beta = 0.305/48
+        Beta = 0.405/48
     ratio = 0.0001
     # user_info = np.load('./processed_data/ori_data_old.npy', allow_pickle=True).item()
     # trajs = np.load('../beijing/processed_data/traj_mat(filled).npy')
     trajs = np.load('../beijing/processed_data/traj_mat(filled,uncluster).npy')
-    trajs = trajs[:, :15*48]
+    # trajs = np.load('../beijing/processed_data/traj_mat(filled,uncluster,sample).npy')
+    trajs = trajs[:, :27*48]
     user_info = {}
     for idx, traj in enumerate(trajs):
         user_info[idx] = {'trace': traj}
