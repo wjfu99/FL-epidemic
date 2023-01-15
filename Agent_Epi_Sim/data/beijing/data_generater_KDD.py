@@ -135,12 +135,12 @@ def main():
         # 下面的是在大尺度下的感染率
         Mu = 0.071/48
         Beta = 0.405/48
-    ratio = 0.0001
+    ratio = 0.01
     # user_info = np.load('./processed_data/ori_data_old.npy', allow_pickle=True).item()
     # trajs = np.load('../beijing/processed_data/traj_mat(filled).npy')
-    trajs = np.load('../beijing/processed_data/traj_mat(filled,uncluster).npy')
-    # trajs = np.load('../beijing/processed_data/traj_mat(filled,uncluster,sample).npy')
-    trajs = trajs[:, :27*48]
+    # trajs = np.load('../beijing/processed_data/traj_mat(filled,uncluster).npy')
+    trajs = np.load('../beijing/processed_data/traj_mat(filled,uncluster,sample).npy')
+    trajs = trajs[:, :20*48]
     user_info = {}
     for idx, traj in enumerate(trajs):
         user_info[idx] = {'trace': traj}
