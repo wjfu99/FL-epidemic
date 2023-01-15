@@ -89,10 +89,25 @@ def data_process_save(all_dict, poi_id):
         a2d[i] = {}
         a2d[i]['trace'] = list(a1_d[i].values())
     traj_mat = traj_covert(a2d)
-    np.save('./processed_data/reg_id(filled,uncluster).npy', reg_id)
+    np.save('./processed_data/reg_id(filled).npy', reg_id)
+    np.save('./processed_data/ori_data(filled).npy', a2d)
+    np.save('./processed_data/traj_mat(filled).npy', traj_mat)
+    return a2d, traj_mat
+
+def data_process_save_for_uncluster(all_dict, poi_id):
+    a1_d = {}
+    for u in tqdm(all_dict):
+        a1_d[u] = {}
+        for j in all_dict[u]:
+            assert all_dict[u][j] != -1
+            a1_d[u][j] = poi_id[all_dict[u][j]]
+    a2d = {}
+    for i in a1_d:
+        a2d[i] = {}
+        a2d[i]['trace'] = list(a1_d[i].values())
+    traj_mat = traj_covert(a2d)
     np.save('./processed_data/ori_data(filled,uncluster).npy', a2d)
     np.save('./processed_data/traj_mat(filled,uncluster).npy', traj_mat)
-    return a2d, traj_mat
 
 nopoi = set()
 def main():
@@ -110,7 +125,8 @@ def main():
     locations, trace_array, poi_id = traj_count_poi(all_dict)
     # 新增的poi_区域聚合之后的id
     # poi_id = np.load("./processed_data/poi_loc2region(wgs84).npy", allow_pickle=True).item()
-    a2d, traj_mat = data_process_save(all_dict, poi_id)
+    # a2d, traj_mat = data_process_save(all_dict, poi_id)
+    data_process_save_for_uncluster(all_dict, poi_id)
 
 
 
