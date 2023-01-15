@@ -76,7 +76,10 @@ idx_test = np.array(range(train_num, sample_num))
 
 
 # Generate the hypergraph sequence
-graph_seq = hypergraph_sequence_generator(traj[:, :env_args['sim_days']*48], seq_num=env_args['seq_num'], device=device)
+graph_seq = hypergraph_sequence_generator(
+    traj[:, :env_args['sim_days']*48],
+    seq_num=env_args['seq_num'],
+    device=device, unique_len=env_args['unique_len'])
 # H = np.load('../HGNN-Epidemic/bj-sim/privacy/noposterior/H_un=10_rm01=True.npy')
 # graph_seq = [hypergraph2hyperindex(H, device)]
 

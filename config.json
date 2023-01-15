@@ -3,14 +3,15 @@
   {
     "debug": false,
     "tensorboard": true,
-    "tsboard_comm": "large"
+    "tsboard_comm": "largec"
   },
   "env_args":
   {
     "train_ratio": 0.4,
-    "sim_days": 15,
+    "sim_days": 1,
     "seq_num": 1,
-    "dataset": "large"
+    "unique_len": 48,
+    "dataset": "largec"
   },
   "model_args":
   {

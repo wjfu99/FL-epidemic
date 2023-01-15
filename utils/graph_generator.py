@@ -13,7 +13,7 @@ def hypergraph_generator(traj, unique_len=None):
             hyperedge_index[1].extend(loc)
     else:
         # loc_num = loc.max()
-        assert traj.shape[1] % unique_len ==0
+        assert traj.shape[1] % unique_len == 0
         unique_num = traj.shape[1] // unique_len
         hyperedge2st = {}
         edge_idx = 0
@@ -35,9 +35,9 @@ def hypergraph_generator(traj, unique_len=None):
     hyperedge_index = np.array(hyperedge_index)
     return hyperedge_index
 
-def hypergraph_sequence_generator(traj, seq_num, device):
+def hypergraph_sequence_generator(traj, seq_num, device, unique_len=48):
     trajs = np.split(traj, seq_num, axis=1)
-    hyperedge_index_seq = [torch.tensor(hypergraph_generator(i, unique_len=48)).to(device) for i in trajs]
+    hyperedge_index_seq = [torch.tensor(hypergraph_generator(i, unique_len=unique_len)).to(device) for i in trajs]
     return hyperedge_index_seq
 
 def hypergraph2hyperindex(hypergraph,device):
