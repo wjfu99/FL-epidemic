@@ -19,5 +19,6 @@ def fl_dp(model, optimizer, **model_args):
     scale = get_lr(optimizer) * model_args['fl_clip'] * math.sqrt(2 * math.log(1.25 / model_args['fl_delt'], math.e)) / \
             model_args['fl_eps']
     for para_name in model_state:
-        if 'clients' in para_name:
+        if 'usr_emb' not in para_name:
             model_state[para_name] += scale * torch.randn_like(model_state[para_name])
+    model.load_state_dict(model_state)
