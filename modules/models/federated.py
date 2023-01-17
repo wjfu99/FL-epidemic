@@ -50,7 +50,7 @@ class MultiScaleFedGNN(nn.Module):
             for hyper_conv in self.hyper_convs:
                 if self.loc_dp:
                     dp_args = {'fake_loc': self.fake_locs[idx],
-                               'real_loc': self.real_loc[idx],
+                               'real_loc': self.real_locs[idx],
                                'epoch': epoch
                                }
                 else:

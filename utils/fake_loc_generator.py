@@ -12,7 +12,8 @@ def fake_loc_gen(traj_mat, seq_num):
         fake_locs.append({})
         for uid, usr in enumerate(traj):
             r_loc = set(np.unique(usr))
-            r_loc.remove(-1)
+            if -1 in r_loc:
+                r_loc.remove(-1)
             f_loc = random.choices(list(loc_set - r_loc), k=len(r_loc))
             real_locs[i][uid] = r_loc
             fake_locs[i][uid] = f_loc
