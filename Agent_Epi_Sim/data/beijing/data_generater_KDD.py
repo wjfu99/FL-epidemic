@@ -139,8 +139,8 @@ def main():
     # user_info = np.load('./processed_data/ori_data_old.npy', allow_pickle=True).item()
     # trajs = np.load('../beijing/processed_data/traj_mat(filled).npy')
     # trajs = np.load('../beijing/processed_data/traj_mat(filled,uncluster).npy')
-    trajs = np.load('../beijing/processed_data/traj_mat(filled,uncluster,sample).npy')
-    trajs = trajs[:, :20*48]
+    trajs = np.load('../beijing/processed_data/traj_mat(filled,sample).npy')
+    trajs = trajs[:, :14*48]
     user_info = {}
     for idx, traj in enumerate(trajs):
         user_info[idx] = {'trace': traj}
