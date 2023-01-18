@@ -37,7 +37,10 @@ def hypergraph_generator(traj, unique_len=None):
 
 def hypergraph_sequence_generator(traj, seq_num, device, unique_len=48):
     trajs = np.split(traj, seq_num, axis=1)
-    hyperedge_index_seq = [torch.tensor(hypergraph_generator(i, unique_len=unique_len)).to(device) for i in trajs]
+    hyperedge_index_list = [hypergraph_generator(i, unique_len=unique_len) for i in trajs]
+    hyperedge_index_seq = []
+    for hyperedge_index in hyperedge_index_list:
+        torch.tensor(hyperedge_index).to(device)
     return hyperedge_index_seq
 
 def hypergraph2hyperindex(hypergraph,device):
