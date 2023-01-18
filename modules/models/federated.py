@@ -16,7 +16,7 @@ class ClientModel(nn.Module):
 
     
 class MultiScaleFedGNN(nn.Module):
-    def __init__(self, usr_num, usr_dim=32, loc_dim_1=64, loc_dim_2=64, usr_dim1=32, usr_dim2=16, rnn_lay_num=2, class_num=2, **model_args):
+    def __init__(self, usr_num, usr_dim=32, loc_dim_1=64, loc_dim_2=64, usr_dim1=32, usr_dim2=16, rnn_lay_num=1, class_num=2, **model_args):
         super().__init__()
         self.usr_num = usr_num
         # init user embedding
@@ -32,8 +32,10 @@ class MultiScaleFedGNN(nn.Module):
         if model_args['loc_dp']:
             self.fake_locs = model_args['fake_locs']
             self.real_locs = model_args['real_locs']
-        self.clients_rnn = getattr(base_models, 'LSTM')(usr_dim1, usr_dim2, rnn_lay_num, bias=True, batch_first=False, dropout=0.2)
-        self.output_layer = nn.Linear(32, class_num)
+        # self.clients_rnn = getattr(base_models, 'LSTM')(usr_dim1, usr_dim2, rnn_lay_num, bias=True, batch_first=False)
+        self.clients_rnn = getattr(base_models, 'Transformer')(10, 5, usr_dim1, 1, usr_dim2, n_decoder_layers=3, n_encoder_layers=3,
+                 n_heads=3)
+        self.output_layer = nn.Linear(usr_dim2, class_num)
 
     # TODO: emphasize that we add noise on the updated values of usr embedding.
     # TODO: notice that we can add noise to the xxx
@@ -66,7 +68,11 @@ class MultiScaleFedGNN(nn.Module):
 
         # process with RNN-based model
         # out, (h, c) = self.clients_rnn(outseq)
-        out = self.output_layer(outseq[-1, :, :]) #Utilize the last output of RNN for prediction.
+        outseq = outseq.permute(1, 0, 2)
+        outseq = outseq[None, :, :, :]
+        out = self.clients_rnn(outseq)
+        out = F.relu(out)
+        out = self.output_layer(out[-1, :, :]) #Utilize the last output of RNN for prediction.
         return out
 #
 # class RNN(torch.nn.Module):
