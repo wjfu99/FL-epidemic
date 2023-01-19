@@ -257,11 +257,11 @@ def main():
     my_net = RNN(node_features=1, output=1, dim=32, rnn_depth=1).to(device)
 
     train_data = LoadData(num_nodes=3, divide_days=[42, 21],
-                          time_interval=1, history_length=7, train_mode="train")
-    train_loader = DataLoader(train_data, batch_size=16, shuffle=False)
+                          time_interval=1, history_length=3, train_mode="train")
+    train_loader = DataLoader(train_data, batch_size=1, shuffle=False)
     test_data = LoadData(num_nodes=3, divide_days=[42, 21],
                          time_interval=1, history_length=7, train_mode="test")
-    test_loader = DataLoader(test_data, batch_size=16, shuffle=False)
+    test_loader = DataLoader(test_data, batch_size=1, shuffle=False)
 
     criterion = torch.nn.MSELoss()
     optimizer = optim.Adam(params=my_net.parameters(), lr=0.005)  # 没写学习率，表示使用的是默认的，也就是lr=1e-3

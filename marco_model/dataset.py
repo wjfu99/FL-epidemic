@@ -16,11 +16,12 @@ class LoadData(Dataset):  # 这个就是把读入的数据处理成模型需要�
         self.history_length = history_length
         self.time_interval = time_interval  # 5 min
 
-        self.one_day_length = int(24 * 1 / self.time_interval)  # 一整天的数据量
+        self.one_day_length = int(1 / self.time_interval)  # 一整天的数据量
 
         self.edge_attr = torch.tensor(np.load('./reg_edge_att.npy'))
         self.edge_index = torch.tensor(np.load('./reg_edge_idx.npy'))
         node_feature = np.load('../Agent_Epi_Sim/data/beijing/processed_data/region_epi_freq.npy')
+        node_feature = node_feature[:, :, None]
         self.flow_norm, self.flow_data = self.pre_process_data(data=node_feature, norm_dim=1)  # self.flow_norm为归一化的
 
     def __len__(self):
