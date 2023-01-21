@@ -29,10 +29,9 @@ def gleam_epidemic(pop_info,period,ori,end):
                 if pop_info[i]['state'] == 'I':
                     region_infected_num[pop_info[i]['trace'][j]] += 1
                 region_pop_num[pop_info[i]['trace'][j]] += 1
-        if statistic_idx != statistic_len:
-            region_infected_freq += region_infected_num
-            statistic_idx += 1
-        else:
+        region_infected_freq += region_infected_num
+        statistic_idx += 1
+        if statistic_idx == statistic_len:
             statistic_data.append(region_infected_freq)
             region_infected_freq = np.zeros(Region_num, dtype=int)
             statistic_idx = 0
@@ -46,7 +45,7 @@ def gleam_epidemic(pop_info,period,ori,end):
                 elif pop_info[info]['state'] == 'I':
                     if random.uniform(0, 1) < Mu:
                         pop_info[info]['state'] = 'R'
-    # np.save('dddd.npy', statistic_data)
+    np.save('./processed_data/region_epi_freq.npy', np.array(statistic_data).T)
     return pop_info
 
 #应该是处理最后的尾巴数据的， 其他基本和gleam epidemic基本一样。
@@ -153,6 +152,7 @@ def main():
     # trajs = np.load('../beijing/processed_data/traj_mat(filled,uncluster).npy')
     trajs = np.load('../beijing/processed_data/traj_mat(filled,sample).npy')
     trajs = trajs[:, :14*48]
+    Region_num = np.unique(trajs).max() + 1
     user_info = {}
     for idx, traj in enumerate(trajs):
         user_info[idx] = {'trace': traj}
