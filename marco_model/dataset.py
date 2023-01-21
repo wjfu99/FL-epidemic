@@ -19,6 +19,8 @@ class LoadData(Dataset):  # 这个就是把读入的数据处理成模型需要�
         node_feature = node_feature[:, :, None]
         self.dataset_len = node_feature.shape[1]
         self.flow_norm, self.flow_data = self.pre_process_data(data=node_feature, norm_dim=1)  # self.flow_norm为归一化的
+        self.flow_data = node_feature
+        self.flow_norm = None
 
     def __len__(self):
         """
