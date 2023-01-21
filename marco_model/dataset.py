@@ -7,21 +7,17 @@ from torch.utils.data import Dataset
 
 
 class LoadData(Dataset):  # 这个就是把读入的数据处理成模型需要的训练数据和测试数据，一个一个样本能读取出来
-    def __init__(self, num_nodes, divide_days, time_interval, history_length, train_mode):
+    def __init__(self, history_length, train_mode, device):
         # 在此处读取特征文件，构造edge_index,edge_attr,flow_data
-        self.num_nodes = num_nodes
         self.train_mode = train_mode
-        self.train_days = divide_days[0]
-        self.test_days = divide_days[1]
         self.history_length = history_length
-        self.time_interval = time_interval  # 5 min
 
-        self.one_day_length = int(1 / self.time_interval)  # 一整天的数据量
 
-        self.edge_attr = torch.tensor(np.load('./reg_edge_att.npy'))
-        self.edge_index = torch.tensor(np.load('./reg_edge_idx.npy'))
+        self.edge_attr = torch.tensor(np.load('./reg_edge_att.npy')).to(device)
+        self.edge_index = torch.tensor(np.load('./reg_edge_idx.npy')).to(device)
         node_feature = np.load('../Agent_Epi_Sim/data/beijing/processed_data/region_epi_freq.npy')
         node_feature = node_feature[:, :, None]
+        self.dataset_len = node_feature.shape[1]
         self.flow_norm, self.flow_data = self.pre_process_data(data=node_feature, norm_dim=1)  # self.flow_norm为归一化的
 
     def __len__(self):
@@ -29,9 +25,9 @@ class LoadData(Dataset):  # 这个就是把读入的数据处理成模型需要�
         :return: length of dataset (number of samples).
         """
         if self.train_mode == "train":
-            return self.train_days * self.one_day_length - self.history_length  # 训练的样本数　＝　训练集总长度　－　历史数据长度
+            return self.dataset_len - self.history_length  # 训练的样本数　＝　训练集总长度　－　历史数据长度
         elif self.train_mode == "test":
-            return self.test_days * self.one_day_length  # 每个样本都能测试，测试样本数　＝　测试总长度
+            return self.dataset_len - self.history_length + 1  # 每个样本都能测试，测试样本数　＝　测试总长度
         else:
             raise ValueError("train mode: [{}] is not defined".format(self.train_mode))
 
@@ -43,12 +39,12 @@ class LoadData(Dataset):  # 这个就是把读入的数据处理成模型需要�
             data_x: torch.tensor, [N, H, D].
             data_y: torch.tensor, [N, 1, D].
         """
-        if self.train_mode == "train":
-            index = index  # 训练集的数据是从时间０开始的，这个是每一个流量数据，要和样本（ｘ,y）区别
-        elif self.train_mode == "test":
-            index += self.train_days * self.one_day_length  # 有一个偏移量
-        else:
-            raise ValueError("train mode: [{}] is not defined".format(self.train_mode))
+        # if self.train_mode == "train":
+        #     index = index  # 训练集的数据是从时间０开始的，这个是每一个流量数据，要和样本（ｘ,y）区别
+        # elif self.train_mode == "test":
+        #     index += self.train_days * self.one_day_length  # 有一个偏移量
+        # else:
+        #     raise ValueError("train mode: [{}] is not defined".format(self.train_mode))
 
         data_x, data_y = LoadData.slice_data(self.flow_data, self.history_length, index, self.train_mode)  # 这个就是样本（ｘ,y）
 
@@ -73,8 +69,8 @@ class LoadData(Dataset):  # 这个就是把读入的数据处理成模型需要�
             start_index = index  # 开始下标就是时间下标本身，这个是闭区间
             end_index = index + history_length  # 结束下标,这个是开区间
         elif train_mode == "test":
-            start_index = index - history_length  # 开始下标
-            end_index = index  # 结束下标
+            start_index = index  # 开始下标
+            end_index = index + history_length # 结束下标
         else:
             raise ValueError("train model {} is not defined".format(train_mode))
 

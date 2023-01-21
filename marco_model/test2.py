@@ -12,6 +12,7 @@ from torch.optim.lr_scheduler import StepLR
 import graph_nets
 import time
 import numpy as np
+from RNNModel.recurrent import RNNModel
 
 # CONSTRUCT MODELS
 WSC = WeightedSAGEConv
@@ -253,20 +254,21 @@ class RNN(torch.nn.Module):
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    device = torch.device("cpu")
-    my_net = RNN(node_features=1, output=1, dim=32, rnn_depth=1).to(device)
+    # device = torch.device("cpu")
+    edge_index = torch.tensor(np.load('./reg_edge_idx.npy'))
+    edge_weight = torch.tensor(np.load('./reg_edge_att.npy'))
+    my_net = RNNModel(sparse_idx=edge_index, edge_weights=edge_weight, conv_method='GConvGRU', max_view=1,
+                      node_num=3578, layer_num=1, input_dim=1, output_dim=1, seq_len=3, horizon=1).to(device)
 
-    train_data = LoadData(num_nodes=3, divide_days=[42, 21],
-                          time_interval=1, history_length=3, train_mode="train")
-    train_loader = DataLoader(train_data, batch_size=1, shuffle=False)
-    test_data = LoadData(num_nodes=3, divide_days=[42, 21],
-                         time_interval=1, history_length=7, train_mode="test")
-    test_loader = DataLoader(test_data, batch_size=1, shuffle=False)
+    train_data = LoadData(history_length=3, train_mode="train", device=device)
+    train_loader = DataLoader(train_data, batch_size=11, shuffle=False)
+    test_data = LoadData(history_length=3, train_mode="test", device=device)
+    test_loader = DataLoader(test_data, batch_size=12, shuffle=False)
 
     criterion = torch.nn.MSELoss()
     optimizer = optim.Adam(params=my_net.parameters(), lr=0.005)  # 没写学习率，表示使用的是默认的，也就是lr=1e-3
     scheduler = StepLR(optimizer, step_size=50, gamma=0.5)
-    Epoch = 2  # 训练的次数
+    Epoch = 10  # 训练的次数
     my_net.train()  # 打开训练模式
     Train_loss = []
     Train_loss = []
@@ -279,23 +281,24 @@ def main():
             edge_attr = data["edge_attr"].to(device)
             target = data["flow_y"].to(device)
             data = Data(input, edge_index, edge_attr)
-            predict_value, h, c = my_net(data)
-            loss = criterion(predict_value[:, :, 0:1, :], target)
+            input = input.permute(2, 0, 1, 3)
+            target = target.permute(2, 0, 1, 3)
+            predict_value, encoder_hidden_state = my_net(input)
+            loss = criterion(predict_value, target)
             epoch_loss += loss.item()
+            loss.backward()
             optimizer.step()  # 更新参数
             end_time = time.time()
             b = 1000 * epoch_loss / len(train_data)
             Train_loss.append(b)
-            print(
-                "Epoch: {:04d}, Loss: {:02.4f}, Time: {:02.2f} mins".format(epoch, 1000 * epoch_loss / len(train_data),
+        print(
+            "Epoch: {:04d}, Loss: {:02.4f}, Time: {:02.2f} mins".format(epoch, 1000 * epoch_loss / len(train_data),
                                                                             (end_time - start_time) / 60))
 
     # Test Model
     my_net.eval()
     with torch.no_grad():
         MAE, MAPE, RMSE = [], [], []
-        Target = np.zeros([3, 1, 1])  # [N, T, D],T=1 ＃ 目标数据的维度，用０填充
-        Predict = np.zeros_like(Target)  # [N, T, D],T=1 # 预测数据的维度
 
         total_loss = 0.0
         Test_loss = []
@@ -306,8 +309,10 @@ def main():
             edge_attr = data["edge_attr"].to(device)
             target = data["flow_y"].to(device)
             data = Data(input, edge_index, edge_attr)
-            predict_value, h, c = my_net(data)
-            loss = criterion(predict_value[:, :, 0:1, :], target)
+            input = input.permute(2, 0, 1, 3)
+            target = target.permute(2, 0, 1, 3)
+            predict_value, encoder_hidden_state = my_net(input)
+            loss = criterion(predict_value, target)
             Test_loss.append(loss.item())
             total_loss += loss.item()
 

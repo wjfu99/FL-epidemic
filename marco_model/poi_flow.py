@@ -12,3 +12,16 @@ for traj in trajs:
         for usr in range(traj.shape[0]):
             if traj[usr, t] != traj[usr, t+1]:
                 tf_mat[traj[usr, t], traj[usr, t+1]] += 1
+
+edge_index = [[], []]
+edge_attr = []
+for i in range(tf_mat.shape[0]):
+    for j in range(tf_mat.shape[1]):
+        if tf_mat[i, j] != 0:
+            edge_index[0].append(i)
+            edge_index[1].append(j)
+            edge_attr.append(tf_mat[i, j])
+edge_index = np.array(edge_index)
+edge_attr = np.array(edge_attr)
+np.save('reg_edge_idx.npy', edge_index)
+np.save('reg_edge_att.npy', edge_attr)
