@@ -32,9 +32,9 @@ class MultiScaleFedGNN(nn.Module):
         if model_args['loc_dp']:
             self.fake_locs = model_args['fake_locs']
             self.real_locs = model_args['real_locs']
-        # self.clients_rnn = getattr(base_models, 'LSTM')(usr_dim1, usr_dim2, rnn_lay_num, bias=True, batch_first=False)
-        self.clients_rnn = getattr(base_models, 'Transformer')(10, 5, usr_dim1, 1, usr_dim2, n_decoder_layers=3, n_encoder_layers=3,
-                 n_heads=3)
+        self.clients_rnn = getattr(base_models, 'LSTM')(usr_dim1, usr_dim2, rnn_lay_num, bias=True, batch_first=False)
+        # self.clients_rnn = getattr(base_models, 'Transformer')(10, 5, usr_dim1, 1, usr_dim2, n_decoder_layers=3, n_encoder_layers=3,
+        #          n_heads=3)
         self.output_layer = nn.Linear(usr_dim2, class_num)
 
     # TODO: emphasize that we add noise on the updated values of usr embedding.
@@ -44,11 +44,12 @@ class MultiScaleFedGNN(nn.Module):
         # out = self.usr_emb(range(self.usr_num))
         usr_input = self.usr_emb.weight
         outseq = None
-        x = usr_input
+        # x = usr_input
         # aggregate from node to edge in server
         for idx in range(len(hyperedge_seq)):
             hyperedge_idx = hyperedge_seq[idx]
             # aggregate from neighbor locations
+            x = usr_input
             for hyper_conv in self.hyper_convs:
                 if self.loc_dp:
                     dp_args = {'fake_loc': self.fake_locs[idx],
@@ -67,10 +68,10 @@ class MultiScaleFedGNN(nn.Module):
                 outseq = torch.cat((outseq, usr_emb), dim=0)
 
         # process with RNN-based model
-        # out, (h, c) = self.clients_rnn(outseq)
-        outseq = outseq.permute(1, 0, 2)
-        outseq = outseq[None, :, :, :]
-        out = self.clients_rnn(outseq)
+        out, (h, c) = self.clients_rnn(outseq)
+        # outseq = outseq.permute(1, 0, 2)
+        # outseq = outseq[None, :, :, :]
+        # out = self.clients_rnn(outseq)
         out = F.relu(out)
         out = self.output_layer(out[-1, :, :]) #Utilize the last output of RNN for prediction.
         return out
