@@ -77,8 +77,10 @@ class LoadData(Dataset):  # 这个就是把读入的数据处理成模型需要�
             raise ValueError("train model {} is not defined".format(train_mode))
 
         data_x = data[:, start_index: end_index]  # 在切第二维，不包括end_index
-        data_y = data[:, end_index]
-
+        if end_index >= data.shape[1]:
+            data_y = data[:, end_index-1]
+        else:
+            data_y = data[:, end_index]
         return data_x, data_y
 
     @staticmethod
