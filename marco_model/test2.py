@@ -266,9 +266,9 @@ def main():
     test_loader = DataLoader(test_data, batch_size=12, shuffle=False)
 
     criterion = torch.nn.MSELoss()
-    optimizer = optim.Adam(params=my_net.parameters(), lr=0.005)  # 没写学习率，表示使用的是默认的，也就是lr=1e-3
+    optimizer = optim.Adam(params=my_net.parameters(), lr=0.1)  # 没写学习率，表示使用的是默认的，也就是lr=1e-3
     scheduler = StepLR(optimizer, step_size=50, gamma=0.5)
-    Epoch = 10  # 训练的次数
+    Epoch = 100  # 训练的次数
     my_net.train()  # 打开训练模式
     Train_loss = []
     Train_loss = []
@@ -294,7 +294,8 @@ def main():
         print(
             "Epoch: {:04d}, Loss: {:02.4f}, Time: {:02.2f} mins".format(epoch, 1000 * epoch_loss / len(train_data),
                                                                             (end_time - start_time) / 60))
-
+        if 1000 * epoch_loss / len(train_data) < 230000:
+            break
     # Test Model
     my_net.eval()
     with torch.no_grad():
@@ -312,9 +313,10 @@ def main():
             input = input.permute(2, 0, 1, 3)
             target = target.permute(2, 0, 1, 3)
             predict_value, encoder_hidden_state = my_net(input)
-            loss = criterion(predict_value, target)
-            Test_loss.append(loss.item())
-            total_loss += loss.item()
+            np.save('region_epi_emb.npy', encoder_hidden_state.cpu().detach().numpy())
+            # loss = criterion(predict_value, target)
+            # Test_loss.append(loss.item())
+            # total_loss += loss.item()
 
             performance, data_to_save = compute_performance(predict_value, target,
                                                             test_loader)  # 计算模型的性能，返回评价结果和恢复好的数据
