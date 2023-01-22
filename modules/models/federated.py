@@ -38,6 +38,8 @@ class MultiScaleFedGNN(nn.Module):
         if model_args['macro']:
             self.macro = True
             self.macro_emb_seq = model_args['loc_emb_seq']
+        else:
+            self.macro = False
         self.output_layer = nn.Linear(usr_dim2, class_num)
 
     # TODO: emphasize that we add noise on the updated values of usr embedding.
@@ -63,6 +65,8 @@ class MultiScaleFedGNN(nn.Module):
                     dp_args = None
                 if self.macro:
                     macro_emb = self.macro_emb_seq[idx]
+                else:
+                    macro_emb = None
                 x = hyper_conv(x, hyperedge_idx, dp_args=dp_args, macro_emb=macro_emb)
                 x = F.relu(x)
 

@@ -23,7 +23,7 @@
     "fl_eps": 1,
     "fl_delt": 0.01,
     "fl_clip": 0.1,
-    "macro": true
+    "macro": false
   },
   "optim_args":
   {
