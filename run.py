@@ -117,6 +117,7 @@ if model_args['macro']:
         edge_emb = torch.tensor(edge_emb).to(device)
         emb_seq.append(edge_emb)
     cfg['model_args']['loc_emb_seq'] = emb_seq
+    cfg['model_args']['loc_emb_dim'] = reg_emb_dim
         # edge_emb = np.zeros((len(index), reg_emb.shape[-1]))
         # loc_list = np.array([loc for loc, _ in index])
         # edge_emb = reg_emb[loc_list, :, :]

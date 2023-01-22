@@ -196,7 +196,9 @@ class Dp_HypergraphConv(MessagePassing):
         self.loc_dp = model_args['loc_dp']
         if model_args['loc_dp']:
             self.agg_dp = Dp_Agg(model_args['loc_eps'], model_args['loc_delt'], model_args['loc_clip'])
-
+        if model_args['macro']:
+            self.bias = Parameter(torch.Tensor(out_channels + model_args['loc_emb_dim']))
+            self.trans = torch.nn.Linear(out_channels + model_args['loc_emb_dim'], out_channels, bias=True)
     def reset_parameters(self):
         self.lin.reset_parameters()
         if self.use_attention:
@@ -266,6 +268,7 @@ class Dp_HypergraphConv(MessagePassing):
         if macro_emb is not None:
             macro_emb = macro_emb.unsqueeze(1)
             out = torch.concat((out, macro_emb), dim=2)
+            self.out_channels += macro_emb.size()[-1]
         out = self.propagate(hyperedge_index.flip([0]), x=out, norm=D,
                              alpha=alpha, size=(num_edges, num_nodes))
 
@@ -273,10 +276,12 @@ class Dp_HypergraphConv(MessagePassing):
             out = out.view(-1, self.heads * self.out_channels)
         else:
             out = out.mean(dim=1)
-
+        self.out_channels = 32
         if self.bias is not None:
             out = out + self.bias
 
+        if macro_emb is not None:
+            out = self.trans(out.float())
         return out
 
     def message(self, x_j: Tensor, norm_i: Tensor, alpha: Tensor) -> Tensor:

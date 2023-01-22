@@ -9,7 +9,7 @@
   {
     "train_ratio": 0.4,
     "sim_days": 14,
-    "seq_num": 14,
+    "seq_num": 7,
     "unique_len": 16,
     "dataset": "largec"
   },
@@ -22,11 +22,12 @@
     "fl_dp": false,
     "fl_eps": 1,
     "fl_delt": 0.01,
-    "fl_clip": 0.1
+    "fl_clip": 0.1,
+    "macro": true
   },
   "optim_args":
   {
-    "max_epoch": 100,
+    "max_epoch": 300,
     "lr": 0.01,
     "milestones": [100, 200, 300],
     "gamma": 0.7,
