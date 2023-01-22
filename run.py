@@ -59,6 +59,12 @@ elif env_args['dataset'] == 'large':
     # generate with old version simulator.
     lbls = np.load('./data/label.npy')
     lbls = torch.tensor(lbls).to(device).squeeze()
+elif env_args['dataset'] == 'largec': # chose as the benchmark.
+    traj = np.load("./datasets/beijing/large-filled-clustered/traj_mat(filled,sample).npy")
+    usr_num = traj.shape[0]
+    lbls = np.load('./datasets/beijing/large-filled-clustered/label.npy')
+    lbls = torch.tensor(lbls).to(device).squeeze()
+    env_args['sim_days'] = 14
 elif env_args['dataset'] == 'small':
     # traj = np.load("./Agent_Epi_Sim/data/beijing/processed_data/traj_mat.npy")
     traj = np.load('../HGNN-Epidemic/bj-sim/privacy/noposterior/trace_array.npy')
@@ -76,17 +82,51 @@ idx_test = np.array(range(train_num, sample_num))
 
 
 # Generate the hypergraph sequence
-graph_seq = hypergraph_sequence_generator(
+graph_seq, index_seq = hypergraph_sequence_generator(
     traj[:, :env_args['sim_days']*48],
     seq_num=env_args['seq_num'],
     device=device, unique_len=env_args['unique_len'])
 # H = np.load('../HGNN-Epidemic/bj-sim/privacy/noposterior/H_un=10_rm01=True.npy')
 # graph_seq = [hypergraph2hyperindex(H, device)]
 
+# Prepare region epidemic embedding
+if model_args['marco']:
+    """
+    inputs: shape ()
+    return: shape ()
+    """
+    reg_emb = np.load('./marco_model/region_epi_emb.npy')
+    reg_emb = reg_emb.squeeze(0)
+    reg_emb = reg_emb.transpose((1, 0, 2))
+    emb_seq = []
+    emb_unit_len = 48  # 1 day
+    reg_emb_dim = reg_emb.shape[-1]
+    # TODO without consideration of rnn module. (only one graph is create)
+    padding_len = env_args['sim_days'] - reg_emb.shape[1]
+    unique_num = env_args['sim_days']*48//env_args['unique_len']//env_args['seq_num']
+    for i, index in enumerate(index_seq):
+        edge_emb = np.zeros((len(index), reg_emb_dim))
+        for j, (loc, t) in enumerate(index):
+            day = (i + t/unique_num*env_args['sim_days']/env_args['seq_num'])
+            time = (i * unique_num + t) * env_args['unique_len']
+            reg_emb_idx = time // emb_unit_len
+            if reg_emb_idx < padding_len:
+                edge_emb[j, :] = np.zeros(reg_emb_dim)
+            else:
+                edge_emb[j, :] = reg_emb[loc, reg_emb_idx-padding_len, :]
+        emb_seq.append(edge_emb)
+    pass
+        # edge_emb = np.zeros((len(index), reg_emb.shape[-1]))
+        # loc_list = np.array([loc for loc, _ in index])
+        # edge_emb = reg_emb[loc_list, :, :]
+
+
 # Fake location generation 
 if model_args['loc_dp']:
     real_locs, fake_locs = fake_loc_gen(traj[:, :env_args['sim_days']*48], seq_num=env_args['seq_num'])
     cfg['model_args']['real_locs'], cfg['model_args']['fake_locs'] = real_locs, fake_locs
+
+# Model definition
 model = MultiScaleFedGNN(usr_num=usr_num, **cfg['model_args']).to(device)
 summary(model)
 criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor([1, 1]).to(device))

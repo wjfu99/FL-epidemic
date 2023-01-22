@@ -33,15 +33,21 @@ def hypergraph_generator(traj, unique_len=None):
                     hyperedge_index[0].append(usr)
                     hyperedge_index[1].append(usr_edge_idx)
     hyperedge_index = np.array(hyperedge_index)
-    return hyperedge_index
+    return hyperedge_index, hyperedge2st
 
 def hypergraph_sequence_generator(traj, seq_num, device, unique_len=48):
     trajs = np.split(traj, seq_num, axis=1)
-    hyperedge_index_list = [hypergraph_generator(i, unique_len=unique_len) for i in trajs]
+    # hyperedge_index_list = [hypergraph_generator(i, unique_len=unique_len) for i in trajs]
+    hyperedge_index_list = []
+    st2idx_list = []
+    for traj in trajs:
+        hyperedge_index, hyperedge2st = hypergraph_generator(traj, unique_len=unique_len)
+        hyperedge_index_list.append(hyperedge_index)
+        st2idx_list.append(hyperedge2st)
     hyperedge_index_seq = []
     for hyperedge_index in hyperedge_index_list:
         hyperedge_index_seq.append(torch.tensor(hyperedge_index).to(device))
-    return hyperedge_index_seq
+    return hyperedge_index_seq, st2idx_list
 
 def hypergraph2hyperindex(hypergraph,device):
     hyperedge_index = [[], []]
