@@ -90,7 +90,7 @@ graph_seq, index_seq = hypergraph_sequence_generator(
 # graph_seq = [hypergraph2hyperindex(H, device)]
 
 # Prepare region epidemic embedding
-if model_args['marco']:
+if model_args['macro']:
     """
     inputs: shape ()
     return: shape ()
@@ -114,8 +114,9 @@ if model_args['marco']:
                 edge_emb[j, :] = np.zeros(reg_emb_dim)
             else:
                 edge_emb[j, :] = reg_emb[loc, reg_emb_idx-padding_len, :]
+        edge_emb = torch.tensor(edge_emb).to(device)
         emb_seq.append(edge_emb)
-    pass
+    cfg['model_args']['loc_emb_seq'] = emb_seq
         # edge_emb = np.zeros((len(index), reg_emb.shape[-1]))
         # loc_list = np.array([loc for loc, _ in index])
         # edge_emb = reg_emb[loc_list, :, :]

@@ -206,7 +206,8 @@ class Dp_HypergraphConv(MessagePassing):
     def forward(self, x: Tensor, hyperedge_index: Tensor,
                 hyperedge_weight: Optional[Tensor] = None,
                 hyperedge_attr: Optional[Tensor] = None,
-                dp_args = None) -> Tensor:
+                dp_args = None,
+                macro_emb = None) -> Tensor:
         r"""
         Args:
             x (Tensor): Node feature matrix
@@ -261,7 +262,10 @@ class Dp_HypergraphConv(MessagePassing):
         if hasattr(self, 'agg_dp'):
             if dp_args['epoch'] != 0:
                 out = self.agg_dp(out, dp_args['fake_loc'], dp_args['real_loc'])
-
+        # integrate with marco model
+        if macro_emb is not None:
+            macro_emb = macro_emb.unsqueeze(1)
+            out = torch.concat((out, macro_emb), dim=2)
         out = self.propagate(hyperedge_index.flip([0]), x=out, norm=D,
                              alpha=alpha, size=(num_edges, num_nodes))
 

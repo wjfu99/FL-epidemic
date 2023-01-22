@@ -35,6 +35,9 @@ class MultiScaleFedGNN(nn.Module):
         self.clients_rnn = getattr(base_models, 'LSTM')(usr_dim1, usr_dim2, rnn_lay_num, bias=True, batch_first=False)
         # self.clients_rnn = getattr(base_models, 'Transformer')(10, 5, usr_dim1, 1, usr_dim2, n_decoder_layers=3, n_encoder_layers=3,
         #          n_heads=3)
+        if model_args['macro']:
+            self.macro = True
+            self.macro_emb_seq = model_args['loc_emb_seq']
         self.output_layer = nn.Linear(usr_dim2, class_num)
 
     # TODO: emphasize that we add noise on the updated values of usr embedding.
@@ -58,7 +61,9 @@ class MultiScaleFedGNN(nn.Module):
                                }
                 else:
                     dp_args = None
-                x = hyper_conv(x, hyperedge_idx, dp_args=dp_args)
+                if self.macro:
+                    macro_emb = self.macro_emb_seq[idx]
+                x = hyper_conv(x, hyperedge_idx, dp_args=dp_args, macro_emb=macro_emb)
                 x = F.relu(x)
 
             usr_emb = x.unsqueeze(0)
