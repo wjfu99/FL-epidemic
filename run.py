@@ -127,10 +127,10 @@ if model_args['macro']:
 if model_args['loc_dp']:
     fake_trajs_dir = './datasets/beijing/large-filled-clustered/fake_trajs.npy'
     reg_epi_freq = np.load('./Agent_Epi_Sim/data/beijing/processed_data/region_epi_freq.npy')
-    fake_edge_idx = plausible_loc_gen(traj[:, :env_args['sim_days']*48], seq_num=env_args['seq_num'],
+    real_locs, fake_locs = plausible_loc_gen(traj[:, :env_args['sim_days']*48], seq_num=env_args['seq_num'],
                                       unique_len=env_args['unique_len'], fake_trajs_dir=fake_trajs_dir,
                                       epi_risk=reg_epi_freq, index_seq=index_seq)
-    real_locs, fake_locs = fake_loc_gen(traj[:, :env_args['sim_days']*48], seq_num=env_args['seq_num'])
+    # real_locs, fake_locs = fake_loc_gen(traj[:, :env_args['sim_days']*48], seq_num=env_args['seq_num'])
     cfg['model_args']['real_locs'], cfg['model_args']['fake_locs'] = real_locs, fake_locs
 
 # Model definition
