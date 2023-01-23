@@ -13,7 +13,7 @@ import os
 import configparser
 import json
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, recall_score, precision_score, precision_recall_curve
-from utils.fake_loc_generator import fake_loc_gen
+from utils.fake_loc_generator import fake_loc_gen, plausible_loc_gen
 from utils.dp_lib import usr_emb_clip, fl_dp
 import copy
 from datetime import datetime
@@ -125,6 +125,11 @@ if model_args['macro']:
 
 # Fake location generation 
 if model_args['loc_dp']:
+    fake_trajs_dir = './datasets/beijing/large-filled-clustered/fake_trajs.npy'
+    reg_epi_freq = np.load('./Agent_Epi_Sim/data/beijing/processed_data/region_epi_freq.npy')
+    fake_edge_idx = plausible_loc_gen(traj[:, :env_args['sim_days']*48], seq_num=env_args['seq_num'],
+                                      fake_trajs_dir=fake_trajs_dir,
+                                      epi_risk=reg_epi_freq, index_seq=index_seq)
     real_locs, fake_locs = fake_loc_gen(traj[:, :env_args['sim_days']*48], seq_num=env_args['seq_num'])
     cfg['model_args']['real_locs'], cfg['model_args']['fake_locs'] = real_locs, fake_locs
 

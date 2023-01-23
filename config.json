@@ -15,7 +15,7 @@
   },
   "model_args":
   {
-    "loc_dp": false,
+    "loc_dp": true,
     "loc_eps": 1,
     "loc_delt": 0.01,
     "loc_clip": 0.1,
