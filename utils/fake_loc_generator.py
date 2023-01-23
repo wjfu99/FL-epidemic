@@ -41,7 +41,7 @@ def global_tf_mat(traj_mat):
 def eval_epi_domain(epi_risk):
     return epi_risk
 
-def plausible_loc_gen(traj_mat, seq_num, fake_trajs_dir, epi_risk=None, index_seq=None):
+def plausible_loc_gen(traj_mat, seq_num, unique_len, fake_trajs_dir, epi_risk=None, index_seq=None):
     tf_mat = global_tf_mat(traj_mat)
     fake_traj_mat = np.full(traj_mat.shape, -1, dtype=int)
     epi_domain = {}
@@ -65,17 +65,30 @@ def plausible_loc_gen(traj_mat, seq_num, fake_trajs_dir, epi_risk=None, index_se
     else:
         fake_traj_mat = np.load(fake_trajs_dir)
 
+    unique_num = traj_mat.shape[1] // seq_num // unique_len
+
     fake_trajs = np.split(fake_traj_mat, seq_num, axis=1)
-    fake_hyperedge_index = [] # seq_num * user_num * fake_edge_num
+    real_trajs = np.split(traj_mat, seq_num, axis=1)
+    fake_hyperedge_index = []  # seq_num * user_num * fake_edge_num
+    real_hyperedge_index = []
     for seq_idx in range(seq_num):
-        edge_index = {}
+        fake_edge_index = {}
+        real_edge_index = {}
         for uid in range(traj_mat.shape[0]):
+            fake_edge_index[uid] = []
+            real_edge_index[uid] = []
             for t_idx in range(unique_num):
                 fake_traj = fake_trajs[seq_idx][uid, t_idx*unique_len:(t_idx+1)*unique_len]
                 fake_locs = np.unique(fake_traj)
-                edge_index[uid] = fake_edge[seq_idx][(fake_locs, t_idx)]
-    fake_hyperedge_index.append(edge_index)
-    return fake_traj_mat
+                real_traj = real_trajs[seq_idx][uid, t_idx * unique_len:(t_idx + 1) * unique_len]
+                real_locs = np.unique(real_traj)
+                for fake_loc in fake_locs:
+                    fake_edge_index[uid].append(index_seq[seq_idx][(fake_loc, t_idx)])
+                for real_loc in real_locs:
+                    real_edge_index[uid].append(index_seq[seq_idx][(real_loc, t_idx)])
+    fake_hyperedge_index.append(fake_edge_index)
+    real_hyperedge_index.append(real_edge_index)
+    return fake_hyperedge_index, real_hyperedge_index
         # for uid, usr_traj in enumerate(traj):
         #     if idx == 0:
         #         fake_locs[uid][idx] =
