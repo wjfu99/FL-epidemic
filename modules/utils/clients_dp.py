@@ -30,7 +30,7 @@ class Dp_Agg(nn.Module):
         loc_noise = np.zeros(loc_emb.shape)
         for usr in real_loc:
             loc_num = len(real_loc[usr]) + len(fake_loc[usr])
-            noise = np.random.normal(loc=0, scale=sigmod, size=(loc_num, loc_emb.shape[1]))
+            noise = np.random.normal(loc=0, scale=sigmod, size=(loc_num, loc_emb.shape[-1]))
             i = 0
             for loc in real_loc[usr]:
                 loc_noise[loc] += noise[i]/edge_cnt[loc]
