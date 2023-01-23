@@ -71,7 +71,7 @@ def plausible_loc_gen(traj_mat, seq_num, unique_len, fake_trajs_dir, epi_risk=No
     real_trajs = np.split(traj_mat, seq_num, axis=1)
     fake_hyperedge_index = []  # seq_num * user_num * fake_edge_num
     real_hyperedge_index = []
-    for seq_idx in range(seq_num):
+    for seq_idx in tqdm(range(seq_num)):
         fake_edge_index = {}
         real_edge_index = {}
         for uid in range(traj_mat.shape[0]):
@@ -83,11 +83,13 @@ def plausible_loc_gen(traj_mat, seq_num, unique_len, fake_trajs_dir, epi_risk=No
                 real_traj = real_trajs[seq_idx][uid, t_idx * unique_len:(t_idx + 1) * unique_len]
                 real_locs = np.unique(real_traj)
                 for fake_loc in fake_locs:
-                    fake_edge_index[uid].append(index_seq[seq_idx][(fake_loc, t_idx)])
+                    # NOTE: The fake locations may not exist in the spatia-temporal hyperedge.
+                    if (fake_loc, t_idx) in index_seq[seq_idx]:
+                        fake_edge_index[uid].append(index_seq[seq_idx][(fake_loc, t_idx)])
                 for real_loc in real_locs:
                     real_edge_index[uid].append(index_seq[seq_idx][(real_loc, t_idx)])
-    fake_hyperedge_index.append(fake_edge_index)
-    real_hyperedge_index.append(real_edge_index)
+        fake_hyperedge_index.append(fake_edge_index)
+        real_hyperedge_index.append(real_edge_index)
     return fake_hyperedge_index, real_hyperedge_index
         # for uid, usr_traj in enumerate(traj):
         #     if idx == 0:
