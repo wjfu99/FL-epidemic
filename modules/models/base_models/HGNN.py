@@ -190,8 +190,6 @@ class Dp_HypergraphConv(MessagePassing):
         else:
             self.register_parameter('bias', None)
 
-        self.reset_parameters()
-
         model_args = kwargs
         self.loc_dp = model_args['loc_dp']
         if model_args['loc_dp']:
@@ -199,6 +197,8 @@ class Dp_HypergraphConv(MessagePassing):
         if model_args['macro']:
             self.bias = Parameter(torch.Tensor(out_channels + model_args['loc_emb_dim']))
             self.trans = torch.nn.Linear(out_channels + model_args['loc_emb_dim'], out_channels, bias=True)
+
+        self.reset_parameters()
     def reset_parameters(self):
         self.lin.reset_parameters()
         if self.use_attention:
