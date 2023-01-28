@@ -195,11 +195,11 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
                                                                    prob[idx, 1])
             fscore = (2 * precision * recall) / (precision + recall + 10e-6)  # calculate the f1 score
             epoch_f1 = fscore.max()
-            max_f1_index = np.argmax(epoch_f1)
+            max_f1_index = np.argmax(fscore)
             threshold = thresholds[max_f1_index]
             epoch_pre = precision[max_f1_index]
             epoch_rec = recall[max_f1_index]
-            # epoch_auc = roc_auc_score(lbls[idx].cpu(), prob[idx, 1])
+            epoch_auc = roc_auc_score(lbls[idx].cpu(), prob[idx, 1])
             epoch_loss = loss.item()
             epoch_acc = accuracy_score(lbls[idx].cpu(), prob[idx, 1] > threshold)
 
@@ -218,6 +218,9 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
                     'train_loss': epoch_loss,
                     'eval_loss': epoch_loss
                 }, epoch)
+                writer.add_scalar('metrics/f1', epoch_f1, epoch)
+                writer.add_scalar('metrics/auc', epoch_auc, epoch)
+                writer.add_scalar('metrics/acc', epoch_acc, epoch)
                 writer.add_pr_curve('pr_curve', lbls[idx].cpu(), prob[idx, 1], epoch)
     if fun_args['tensorboard']:
         writer.close()
