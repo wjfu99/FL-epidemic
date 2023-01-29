@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 from tqdm import tqdm
+import torch_geometric
+from scipy.sparse import coo_array
 
 def hypergraph_generator(traj, unique_len=None):
     hyperedge_index = [[], []]
@@ -59,3 +61,21 @@ def hypergraph2hyperindex(hypergraph,device):
     hyperedge_index = torch.tensor(hyperedge_index).to(device)
     return hyperedge_index
 
+def edge2h(edge):
+    node_num = np.max(edge[0,:]) + 1
+    edge_num = np.max(edge[1,:]) + 1
+    h = np.zeros((node_num, edge_num))
+    for i in range(edge.shape[1]):
+        h[edge[0,i], edge[1,i]] = 1
+    return h
+
+def construct_network(trace_array):
+    pop_num = trace_array.shape[0]
+    hyperedge_index, _ = hypergraph_generator(trace_array, unique_len=48)
+    H = edge2h(hyperedge_index)
+    Meet_frequency = np.dot(H, H.T)
+    adj = np.where(Meet_frequency == 0, 0, 1)
+    adj = coo_array(adj)
+    edge_index, edge_attr = torch_geometric.utils.from_scipy_sparse_matrix(adj)
+    print('Construct network successfully!')
+    return edge_index
