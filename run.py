@@ -60,9 +60,10 @@ elif env_args['dataset'] == 'large':
     lbls = np.load('./data/label.npy')
     lbls = torch.tensor(lbls).to(device).squeeze()
 elif env_args['dataset'] == 'largec': # chose as the benchmark.
-    traj = np.load("./datasets/beijing/large-filled-clustered/traj_mat(filled,sample).npy")
+    data_path = './datasets/beijing/large-filled-clustered/'
+    traj = np.load(data_path + "traj_mat(filled,sample).npy")
     usr_num = traj.shape[0]
-    lbls = np.load('./datasets/beijing/large-filled-clustered/label.npy')
+    lbls = np.load(data_path + 'label.npy')
     lbls = torch.tensor(lbls).to(device).squeeze()
     env_args['sim_days'] = 14
 elif env_args['dataset'] == 'small':
@@ -95,7 +96,7 @@ if model_args['macro']:
     inputs: shape ()
     return: shape ()
     """
-    reg_emb = np.load('./marco_model/region_epi_emb.npy')
+    reg_emb = np.load(data_path + 'region_epi_emb.npy')
     reg_emb = reg_emb.squeeze(0)
     reg_emb = reg_emb.transpose((1, 0, 2))
     emb_seq = []
@@ -125,8 +126,8 @@ if model_args['macro']:
 
 # Fake location generation 
 if model_args['loc_dp']:
-    fake_trajs_dir = './datasets/beijing/large-filled-clustered/fake_trajs.npy'
-    reg_epi_freq = np.load('./Agent_Epi_Sim/data/beijing/processed_data/region_epi_freq.npy')
+    fake_trajs_dir = data_path + 'fake_trajs.npy'
+    reg_epi_freq = np.load(data_path + 'region_epi_freq.npy')
     real_locs, fake_locs = plausible_loc_gen(traj[:, :env_args['sim_days']*48], seq_num=env_args['seq_num'],
                                       unique_len=env_args['unique_len'], fake_trajs_dir=fake_trajs_dir,
                                       epi_risk=reg_epi_freq, index_seq=index_seq)
