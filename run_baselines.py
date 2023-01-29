@@ -25,7 +25,7 @@ from scipy.sparse import coo_array
 # load the cfg file
 # cfg = configparser.ConfigParser()
 # cfg.read('cfg.ini')
-with open("config.json", 'r') as f:
+with open("bs_config.json", 'r') as f:
     cfg = json.load(f)
 fun_args, env_args, model_args, optim_args\
     = cfg['fun_args'], cfg['env_args'], cfg['model_args'], cfg['optim_args']
