@@ -45,6 +45,7 @@ if env_args['dataset'] == 'old_data':
     usr_num = traj.shape[0]
     lbls = np.load('../HGNN-Epidemic/bj-sim/privacy/label.npy')
     lbls = torch.tensor(lbls).to(device).squeeze()
+    env_args['sim_days'] = 40
 elif env_args['dataset'] == 'largec': # chose as the benchmark.
     data_path = './datasets/beijing/large-filled-clustered/'
     traj = np.load(data_path + "traj_mat(filled,sample).npy")
@@ -201,6 +202,11 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
                 writer.add_scalar('metrics/auc', epoch_auc, epoch)
                 writer.add_scalar('metrics/acc', epoch_acc, epoch)
                 writer.add_pr_curve('pr_curve', lbls[idx].cpu(), prob[idx, 1], epoch)
+            # Save result
+            if not os.path.exists('result/{}/'.format(epoch)):
+                os.makedirs('result/{}/'.format(epoch))
+            np.savetxt('result/{}/pre.csv'.format(epoch), precision)
+            np.savetxt('result/{}/rec.csv'.format(epoch), recall)
     if fun_args['tensorboard']:
         writer.close()
 

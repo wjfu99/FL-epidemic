@@ -48,20 +48,7 @@ if env_args['dataset'] == 'old_data':
     usr_num = traj.shape[0]
     lbls = np.load('../HGNN-Epidemic/bj-sim/privacy/label.npy')
     lbls = torch.tensor(lbls).to(device).squeeze()
-elif env_args['dataset'] == 'first_edition':
-    traj = eng.get_traj_mat
-    usr_num = eng.get_usr_num
-    eng.next(env_args['sim_days']*48)
-    lbls = eng.get_usr_states
-    lbls = torch.tensor(label_generator(lbls)).to(device)
-elif env_args['dataset'] == 'large':
-    traj = np.load("./Agent_Epi_Sim/data/beijing/processed_data/traj_mat(filled).npy")
-    usr_num = traj.shape[0]
-    # lbls = joblib.load('./datasets/beijing/large-filled/label')  # TODO the label file should be moved.
-    # lbls = label_generator(lbls)
-    # generate with old version simulator.
-    lbls = np.load('./data/label.npy')
-    lbls = torch.tensor(lbls).to(device).squeeze()
+    env_args['sim_days'] = 40
 elif env_args['dataset'] == 'largec': # chose as the benchmark.
     data_path = './datasets/beijing/large-filled-clustered/'
     traj = np.load(data_path + "traj_mat(filled,sample).npy")
@@ -69,14 +56,6 @@ elif env_args['dataset'] == 'largec': # chose as the benchmark.
     lbls = np.load(data_path + 'label.npy')
     lbls = torch.tensor(lbls).to(device).squeeze()
     env_args['sim_days'] = 14
-elif env_args['dataset'] == 'small':
-    # traj = np.load("./Agent_Epi_Sim/data/beijing/processed_data/traj_mat.npy")
-    traj = np.load('../HGNN-Epidemic/bj-sim/privacy/noposterior/trace_array.npy')
-    # traj = joblib.load('./datasets/beijing/small-unfilled/eng(small)')
-    usr_num = traj.shape[0]
-    lbls = joblib.load('./datasets/beijing/small-unfilled/label(small)')  # TODO the label file should be moved.
-    lbls = label_generator(lbls)
-    lbls = torch.tensor(lbls).to(device).squeeze()
 
 train_ratio = cfg['env_args']['train_ratio']
 sample_num = lbls.shape[0]
@@ -172,6 +151,11 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
                 writer.add_scalar('metrics/auc', epoch_auc, epoch)
                 writer.add_scalar('metrics/acc', epoch_acc, epoch)
                 writer.add_pr_curve('pr_curve', lbls[idx].cpu(), prob[idx, 1], epoch)
+            # Save result
+            if not os.path.exists('result/{}/'.format(epoch)):
+                os.makedirs('result/{}/'.format(epoch))
+            np.savetxt('result/{}/pre.csv'.format(epoch), precision)
+            np.savetxt('result/{}/rec.csv'.format(epoch), recall)
     if fun_args['tensorboard']:
         writer.close()
 
