@@ -12,7 +12,7 @@ trace_array = np.load(data_path + "traj_mat.npy")
 trace_array = trace_array[:, 40:48]
 
 pop_num = trace_array.shape[0]
-label = np.load(data_path + 'label.npy')
+label = np.load(data_path + 'label_omicron.npy')
 
 
 confirmed_ratio = 0.4

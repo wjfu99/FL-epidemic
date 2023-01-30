@@ -294,7 +294,7 @@ def main():
         print(
             "Epoch: {:04d}, Loss: {:02.4f}, Time: {:02.2f} mins".format(epoch, 1000 * epoch_loss / len(train_data),
                                                                             (end_time - start_time) / 60))
-        if 1000 * epoch_loss / len(train_data) < 3100:
+        if 1000 * epoch_loss / len(train_data) < 6000:
             break
     # Test Model
     my_net.eval()
@@ -313,6 +313,8 @@ def main():
             input = input.permute(2, 0, 1, 3)
             target = target.permute(2, 0, 1, 3)
             predict_value, encoder_hidden_state = my_net(input)
+            pv = predict_value.cpu().detach().numpy()
+            tv = target.cpu().detach().numpy()
             np.save('region_epi_emb.npy', encoder_hidden_state.cpu().detach().numpy())
             # loss = criterion(predict_value, target)
             # Test_loss.append(loss.item())
