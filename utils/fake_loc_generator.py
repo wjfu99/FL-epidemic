@@ -104,6 +104,7 @@ def uni_iid(traj_mat):
 
 def agg_iid(traj_mat):
     loc_set, cnt = np.unique(traj_mat, return_counts=True)
+    cnt = cnt / cnt.sum()
     fake_traj_mat = np.random.choice(loc_set, size=(traj_mat.shape), p=cnt)
     return fake_traj_mat
 
@@ -148,10 +149,15 @@ def rw_agg(traj_mat):
 
 
 if __name__ == "__main__":
+    traj_num = 20
+
     data_path = '../datasets/beijing/large-filled-clustered/'
     traj_mat = np.load(data_path + "traj_mat(filled,sample).npy")
-    fake_generator = uni_iid
+    fake_generator = agg_iid
     fake_mat = fake_generator(traj_mat=traj_mat)
+
     if not os.path.exists(data_path + fake_generator.__name__):
         os.makedirs(data_path + fake_generator.__name__)
-    np.save(data_path + fake_generator.__name__ + '/fake_traj_1.npy', fake_mat)
+    for i in tqdm(range(traj_num)):
+        fake_mat = fake_generator(traj_mat=traj_mat)
+        np.save(data_path + fake_generator.__name__ + '/fake_traj_{}.npy'.format(i), fake_mat)
