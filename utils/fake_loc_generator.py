@@ -95,3 +95,63 @@ def plausible_loc_gen(traj_mat, seq_num, unique_len, fake_trajs_dir, epi_risk=No
         #     if idx == 0:
         #         fake_locs[uid][idx] =
 
+
+def uni_iid(traj_mat):
+    loc_set = np.unique(traj_mat)
+    fake_traj_mat = np.random.choice(loc_set, size=(traj_mat.shape))
+    return fake_traj_mat
+
+
+def agg_iid(traj_mat):
+    loc_set, cnt = np.unique(traj_mat, return_counts=True)
+    fake_traj_mat = np.random.choice(loc_set, size=(traj_mat.shape), p=cnt)
+    return fake_traj_mat
+
+
+def rw_agg(traj_mat):
+    tf_mat = global_tf_mat(traj_mat)
+    fake_traj_mat = np.full(traj_mat.shape, -1, dtype=int)
+    loc_set = set(np.unique(traj_mat))
+    for time in tqdm(range(traj_mat.shape[1])):
+        for uid in range(traj_mat.shape[0]):
+            loc_epi_domain = list(loc_set)
+            if time == 0:
+                fake_loc = random.choice(loc_epi_domain)
+            else:
+                last_loc = fake_traj_mat[uid, time - 1]
+                tf_vec = tf_mat[last_loc, loc_epi_domain]
+                tf_vec = tf_vec / tf_vec.sum()
+                fake_loc = np.random.choice(loc_epi_domain, 1, p=tf_vec)
+            fake_traj_mat[uid, time] = fake_loc
+    return fake_traj_mat
+
+def rw_agg(traj_mat):
+    tf_mat = global_tf_mat(traj_mat)
+    fake_traj_mat = np.full(traj_mat.shape, -1, dtype=int)
+    epi_domain = {}
+    loc_set = set(np.unique(traj_mat))
+
+    for time in tqdm(range(traj_mat.shape[1])):
+        epi_domain = epi_domain  # TODO xxxx
+        for uid in range(traj_mat.shape[0]):
+            loc = traj_mat[uid, time]
+            # loc_epi_domain = epi_domain[time][loc]
+            loc_epi_domain = list(loc_set)
+            if time == 0:
+                fake_loc = random.choice(loc_epi_domain)
+            else:
+                last_loc = fake_traj_mat[uid, time - 1]
+                tf_vec = tf_mat[last_loc, loc_epi_domain]
+                tf_vec = tf_vec / tf_vec.sum()
+                fake_loc = np.random.choice(loc_epi_domain, 1, p=tf_vec)
+            fake_traj_mat[uid, time] = fake_loc
+
+
+if __name__ == "__main__":
+    data_path = '../datasets/beijing/large-filled-clustered/'
+    traj_mat = np.load(data_path + "traj_mat(filled,sample).npy")
+    fake_generator = uni_iid
+    fake_mat = fake_generator(traj_mat=traj_mat)
+    if not os.path.exists(data_path + fake_generator.__name__):
+        os.makedirs(data_path + fake_generator.__name__)
+    np.save(data_path + fake_generator.__name__ + '/fake_traj_1.npy', fake_mat)
