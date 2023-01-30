@@ -1,17 +1,18 @@
 import numpy as np
 from tqdm import tqdm
 
-# trace_array = np.load('./privacy/noposterior/trace_array.npy')
-# # trace_array1 = np.load('./obfuscate_data/ori_data_eps=200.npy', allow_pickle=True).item()
-# label = np.load('./privacy/label_omicron.npy')
-# # label = np.load('./privacy/label.npy')
-# x = trace_array.max()
 
-data_path = '../datasets/beijing/large-filled-clustered/'
-trace_array = np.load(data_path + "traj_mat(filled,sample).npy")
-trace_array = trace_array[:, 14:48]
+
+# data_path = '../datasets/beijing/large-filled-clustered/'
+# trace_array = np.load(data_path + "traj_mat(filled,sample).npy")
+# trace_array = trace_array[:, 14:48]
+
+data_path = '../datasets/beijing/small-unfilled-unclustered/'
+trace_array = np.load(data_path + "traj_mat.npy")
+trace_array = trace_array[:, 40:48]
+
 pop_num = trace_array.shape[0]
-label = np.load(data_path + 'label_omicron.npy')
+label = np.load(data_path + 'label.npy')
 
 
 confirmed_ratio = 0.4

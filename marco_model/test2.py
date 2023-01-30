@@ -258,12 +258,12 @@ def main():
     edge_index = torch.tensor(np.load('./reg_edge_idx.npy'))
     edge_weight = torch.tensor(np.load('./reg_edge_att.npy'))
     my_net = RNNModel(sparse_idx=edge_index, edge_weights=edge_weight, conv_method='GConvGRU', max_view=1,
-                      node_num=3578, layer_num=1, input_dim=1, output_dim=1, seq_len=3, horizon=1).to(device)
+                      node_num=11459, layer_num=1, input_dim=1, output_dim=1, seq_len=3, horizon=1).to(device)
 
     train_data = LoadData(history_length=3, train_mode="train", device=device)
-    train_loader = DataLoader(train_data, batch_size=11, shuffle=False)
+    train_loader = DataLoader(train_data, batch_size=37, shuffle=False)
     test_data = LoadData(history_length=3, train_mode="test", device=device)
-    test_loader = DataLoader(test_data, batch_size=12, shuffle=False)
+    test_loader = DataLoader(test_data, batch_size=38, shuffle=False)
 
     criterion = torch.nn.MSELoss()
     optimizer = optim.Adam(params=my_net.parameters(), lr=0.1)  # 没写学习率，表示使用的是默认的，也就是lr=1e-3
@@ -294,7 +294,7 @@ def main():
         print(
             "Epoch: {:04d}, Loss: {:02.4f}, Time: {:02.2f} mins".format(epoch, 1000 * epoch_loss / len(train_data),
                                                                             (end_time - start_time) / 60))
-        if 1000 * epoch_loss / len(train_data) < 230000:
+        if 1000 * epoch_loss / len(train_data) < 3100:
             break
     # Test Model
     my_net.eval()

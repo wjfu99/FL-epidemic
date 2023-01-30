@@ -11,7 +11,7 @@
     "sim_days": 14,
     "seq_num": 1,
     "unique_len": 16,
-    "dataset": "largec"
+    "dataset": "old_data"
   },
   "model_args":
   {

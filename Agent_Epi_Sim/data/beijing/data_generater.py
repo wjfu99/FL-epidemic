@@ -17,6 +17,10 @@ def gleam_epidemic(pop_info,period,ori,end):
         trace_array.append(pop_info[info]['trace'][ori*period*48:48*period*end])
     trace_array = np.array(trace_array)
     print(trace_array.shape)
+    statistic_len = 48
+    statistic_idx = 0
+    statistic_data = []
+    region_infected_freq = np.zeros(Region_num, dtype=int)
     for j in tqdm(range(trace_array.shape[1])):
         region_infected_num = np.zeros(Region_num, dtype=int)
         region_pop_num = np.zeros(Region_num, dtype=int)
@@ -25,6 +29,12 @@ def gleam_epidemic(pop_info,period,ori,end):
                 if pop_info[i]['state'] == 'I':
                     region_infected_num[pop_info[i]['trace'][j]] += 1
                 region_pop_num[pop_info[i]['trace'][j]] += 1
+        region_infected_freq += region_infected_num
+        statistic_idx += 1
+        if statistic_idx == statistic_len:
+            statistic_data.append(region_infected_freq)
+            region_infected_freq = np.zeros(Region_num, dtype=int)
+            statistic_idx = 0
         region_pop_num += np.where(region_pop_num == 0, 1, 0)
         region_force = Beta * np.true_divide(region_infected_num, region_pop_num)
         for info in pop_info:
@@ -35,6 +45,7 @@ def gleam_epidemic(pop_info,period,ori,end):
                 elif pop_info[info]['state'] == 'I':
                     if random.uniform(0, 1) < Mu:
                         pop_info[info]['state'] = 'R'
+    np.save('./processed_data/region_epi_freq.npy', np.array(statistic_data).T)
     return pop_info
 
 #应该是处理最后的尾巴数据的， 其他基本和gleam epidemic基本一样。
@@ -120,7 +131,7 @@ def main():
     # Region_num = 661
     #聚合前区域个数
     Region_num = 11459
-    parameters = 'Omicron'
+    parameters = 'primitive'
     if parameters == 'Omicron':
         # Omicron
         Mu = 0.0030639024815920513
