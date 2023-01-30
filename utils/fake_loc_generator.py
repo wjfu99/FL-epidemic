@@ -126,26 +126,26 @@ def rw_agg(traj_mat):
             fake_traj_mat[uid, time] = fake_loc
     return fake_traj_mat
 
-def rw_agg(traj_mat):
-    tf_mat = global_tf_mat(traj_mat)
-    fake_traj_mat = np.full(traj_mat.shape, -1, dtype=int)
-    epi_domain = {}
-    loc_set = set(np.unique(traj_mat))
-
-    for time in tqdm(range(traj_mat.shape[1])):
-        epi_domain = epi_domain  # TODO xxxx
-        for uid in range(traj_mat.shape[0]):
-            loc = traj_mat[uid, time]
-            # loc_epi_domain = epi_domain[time][loc]
-            loc_epi_domain = list(loc_set)
-            if time == 0:
-                fake_loc = random.choice(loc_epi_domain)
-            else:
-                last_loc = fake_traj_mat[uid, time - 1]
-                tf_vec = tf_mat[last_loc, loc_epi_domain]
-                tf_vec = tf_vec / tf_vec.sum()
-                fake_loc = np.random.choice(loc_epi_domain, 1, p=tf_vec)
-            fake_traj_mat[uid, time] = fake_loc
+# def rw_agg(traj_mat):
+#     tf_mat = global_tf_mat(traj_mat)
+#     fake_traj_mat = np.full(traj_mat.shape, -1, dtype=int)
+#     epi_domain = {}
+#     loc_set = set(np.unique(traj_mat))
+#
+#     for time in tqdm(range(traj_mat.shape[1])):
+#         epi_domain = epi_domain  # TODO xxxx
+#         for uid in range(traj_mat.shape[0]):
+#             loc = traj_mat[uid, time]
+#             # loc_epi_domain = epi_domain[time][loc]
+#             loc_epi_domain = list(loc_set)
+#             if time == 0:
+#                 fake_loc = random.choice(loc_epi_domain)
+#             else:
+#                 last_loc = fake_traj_mat[uid, time - 1]
+#                 tf_vec = tf_mat[last_loc, loc_epi_domain]
+#                 tf_vec = tf_vec / tf_vec.sum()
+#                 fake_loc = np.random.choice(loc_epi_domain, 1, p=tf_vec)
+#             fake_traj_mat[uid, time] = fake_loc
 
 
 if __name__ == "__main__":
@@ -153,7 +153,8 @@ if __name__ == "__main__":
 
     data_path = '../datasets/beijing/large-filled-clustered/'
     traj_mat = np.load(data_path + "traj_mat(filled,sample).npy")
-    fake_generator = agg_iid
+    traj_mat = traj_mat[:, :14*48]
+    fake_generator = uni_iid
     fake_mat = fake_generator(traj_mat=traj_mat)
 
     if not os.path.exists(data_path + fake_generator.__name__):
