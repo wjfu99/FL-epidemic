@@ -53,7 +53,7 @@ elif env_args['dataset'] == 'largec': # chose as the benchmark.
     data_path = './datasets/beijing/large-filled-clustered/'
     traj = np.load(data_path + "traj_mat(filled,sample).npy")
     usr_num = traj.shape[0]
-    lbls = np.load(data_path + 'label.npy')
+    lbls = np.load(data_path + 'label_omicron.npy')
     lbls = torch.tensor(lbls).to(device).squeeze()
     env_args['sim_days'] = 14
 
