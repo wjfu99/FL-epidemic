@@ -18,6 +18,7 @@ from utils.dp_lib import usr_emb_clip, fl_dp
 import copy
 from datetime import datetime
 import joblib
+import random
 
 # load the cfg file
 # cfg = configparser.ConfigParser()
@@ -28,6 +29,16 @@ fun_args, env_args, model_args, optim_args\
     = cfg['fun_args'], cfg['env_args'], cfg['model_args'], cfg['optim_args']
 
 current_time = datetime.now()
+
+seed = fun_args['random_seed']
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)  # if you are using multi-GPU.
+np.random.seed(seed)  # Numpy module.
+random.seed(seed)  # Python random module.
+torch.manual_seed(seed)
+torch.backends.cudnn.benchmark = False
+torch.backends.cudnn.deterministic = True
 
 # For more specific debugging results.
 if cfg['fun_args']["debug"]:
@@ -51,7 +62,7 @@ elif env_args['dataset'] == 'largec': # chose as the benchmark.
     data_path = './datasets/beijing/large-filled-clustered/'
     traj = np.load(data_path + "traj_mat(filled,sample).npy")
     usr_num = traj.shape[0]
-    lbls = np.load(data_path + 'label_omicron.npy')
+    lbls = np.load(data_path + 'label.npy')
     lbls = torch.tensor(lbls).to(device).squeeze()
     env_args['sim_days'] = 14
 
@@ -76,7 +87,7 @@ if model_args['macro']:
     inputs: shape ()
     return: shape ()
     """
-    reg_emb = np.load(data_path + 'region_epi_emb_omicron.npy')
+    reg_emb = np.load(data_path + 'region_epi_emb.npy')
     reg_emb = reg_emb.squeeze(0)
     reg_emb = reg_emb.transpose((1, 0, 2))
     emb_seq = []
