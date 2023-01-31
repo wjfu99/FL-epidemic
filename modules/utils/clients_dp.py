@@ -28,15 +28,18 @@ class Dp_Agg(nn.Module):
         edge_cnt = dict(Counter(edge_cnt))
         sigmod = self.clip * math.sqrt(2 * math.log(1.25 / self.delt, math.e)) / self.eps
         loc_noise = np.zeros(loc_emb.shape)
-        for usr in real_loc:
-            loc_num = len(real_loc[usr]) + len(fake_loc[usr])
-            noise = np.random.normal(loc=0, scale=sigmod, size=(loc_num, loc_emb.shape[-1]))
-            i = 0
-            for loc in real_loc[usr]:
-                loc_noise[loc] += noise[i]/edge_cnt[loc]
-                i += 1
-            for loc in fake_loc[usr]:
-                loc_noise[loc] += noise[i]/edge_cnt[loc]
-                i += 1
+
+        for edge, cnt in edge_cnt.items():
+            loc_noise[edge] += np.random.normal(loc=0, scale=sigmod/np.sqrt(cnt), size=(loc_emb.shape[1]))
+        # for usr in real_loc:
+        #     loc_num = len(real_loc[usr]) + len(fake_loc[usr])
+        #     noise = np.random.normal(loc=0, scale=sigmod, size=(loc_num, loc_emb.shape[-1]))
+        #     i = 0
+        #     for loc in real_loc[usr]:
+        #         loc_noise[loc] += noise[i]/edge_cnt[loc]
+        #         i += 1
+        #     for loc in fake_loc[usr]:
+        #         loc_noise[loc] += noise[i]/edge_cnt[loc]
+        #         i += 1
         loc_emb_noise = loc_emb + torch.Tensor(loc_noise).to(loc_emb.device)
         return loc_emb_noise
