@@ -48,7 +48,12 @@ else:
     # Define the default GPU device
     device = torch.device("cuda:0")
 if fun_args['tensorboard']:
-    writer = SummaryWriter(log_dir='./runs/'+cfg['fun_args']['tsboard_comm']+current_time.strftime('%m-%d %H:%M'))
+    # writer = SummaryWriter(log_dir='./runs/'+cfg['fun_args']['tsboard_comm']+current_time.strftime('%m-%d %H:%M'))
+    if not model_args['loc_dp']:
+        model_args['loc_eps'] = 'None'
+    if not model_args['fl_dp']:
+        model_args['fl_eps'] = 'None'
+    writer = SummaryWriter(log_dir='./runs/' + 'loc_eps' + str(model_args['loc_eps']) + 'fl_eps' + str(model_args['fl_eps']))
 
 # Process the epidemic data.
 if env_args['dataset'] == 'old_data':
@@ -206,10 +211,10 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
             loss_val.append(epoch_loss)
             # Training process visualization.
             if fun_args['tensorboard']:
-                writer.add_scalars('loss', {
-                    'train_loss': epoch_loss,
-                    'eval_loss': epoch_loss
-                }, epoch)
+                # writer.add_scalars('loss', {
+                #     'train_loss': epoch_loss,
+                #     'eval_loss': epoch_loss
+                # }, epoch)
                 writer.add_scalar('metrics/f1', epoch_f1, epoch)
                 writer.add_scalar('metrics/auc', epoch_auc, epoch)
                 writer.add_scalar('metrics/acc', epoch_acc, epoch)

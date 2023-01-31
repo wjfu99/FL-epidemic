@@ -3,7 +3,8 @@
   {
     "debug": false,
     "tensorboard": true,
-    "tsboard_comm": "largec"
+    "tsboard_comm": "largec",
+    "random_seed": 123
   },
   "env_args":
   {
@@ -11,19 +12,19 @@
     "sim_days": 14,
     "seq_num": 1,
     "unique_len": 16,
-    "dataset": "old_data"
+    "dataset": "largec"
   },
   "model_args":
   {
-    "loc_dp": false,
-    "loc_eps": 1,
-    "loc_delt": 0.01,
+    "loc_dp": true,
+    "loc_eps": 4,
+    "loc_delt": 0.001,
     "loc_clip": 0.1,
-    "fl_dp": false,
+    "fl_dp": true,
     "fl_eps": 1,
-    "fl_delt": 0.01,
+    "fl_delt": 0.001,
     "fl_clip": 0.1,
-    "macro": true
+    "macro": false
   },
   "optim_args":
   {
