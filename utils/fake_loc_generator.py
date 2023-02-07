@@ -38,21 +38,46 @@ def global_tf_mat(traj_mat):
     tf_mat = np.nan_to_num(tf_mat, nan=1 / loc_num)
     return tf_mat
 
-def eval_epi_domain(epi_risk):
-    return epi_risk
+# A function inverts a dict with list values.
+# Source: https://stackoverflow.com/questions/35491223/inverting-a-dictionary-with-list-values
+def invert_dict(d):
+    inverse = dict()
+    for key in d:
+        # Go through the list that is saved in the dict:
+        for item in d[key]:
+            # Check if in the inverted dict the key exists
+            if item not in inverse:
+                # If not create a new list
+                inverse[item] = key
+            else:
+                raise ValueError
+    return inverse
+
+def eval_epi_domain(epi_risk, epi_levels=5):
+    epi_domain = {}
+    for idx in range(epi_risk.shape[1]):
+        epi_domain[idx] = {}
+        risk = epi_risk[:, idx]
+        arg_loc = np.argsort(risk)
+        loc = np.array_split(arg_loc, epi_levels)
+        epi_domain[idx]['dom2loc'] = {dom_id: list(dom_loc) for dom_id, dom_loc in enumerate(loc)}
+        epi_domain[idx]['loc2dom'] = invert_dict(epi_domain[idx]['dom2loc'])
+    return epi_domain
 
 def plausible_loc_gen(traj_mat, seq_num, unique_len, fake_trajs_dir, epi_risk=None, index_seq=None):
     tf_mat = global_tf_mat(traj_mat)
     fake_traj_mat = np.full(traj_mat.shape, -1, dtype=int)
-    epi_domain = {}
+    epi_domain = eval_epi_domain(epi_risk)
     loc_set = set(np.unique(traj_mat))
     if not os.path.isfile(fake_trajs_dir):
         for time in tqdm(range(traj_mat.shape[1])):
             epi_domain = epi_domain  # TODO xxxx
             for uid in range(traj_mat.shape[0]):
                 loc = traj_mat[uid, time]
-                # loc_epi_domain = epi_domain[time][loc]
-                loc_epi_domain = list(loc_set)
+                epi_time_idx = time // 48  # 48 indicates 48 half-hour each day.
+                loc_epi_domain = epi_domain[epi_time_idx]['loc2dom'][loc]
+                loc_epi_domain = epi_domain[epi_time_idx]['dom2loc'][loc_epi_domain]
+                # loc_epi_domain = list(loc_set)
                 if time == 0:
                     fake_loc = random.choice(loc_epi_domain)
                 else:
