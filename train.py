@@ -1,8 +1,5 @@
 import numpy as np
-# from modules.models import MultiScaleFedGNN
 from modules import MultiScaleFedGNN
-# import modules
-from Agent_Epi_Sim import Engine
 from utils import hypergraph_generator, hypergraph_sequence_generator, label_generator, hypergraph2hyperindex
 import torch
 import torch.optim as optim
@@ -10,19 +7,15 @@ from torch.nn import functional as F
 from torch.utils.tensorboard import SummaryWriter
 from torchinfo import summary
 import os
-import configparser
 import json
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, recall_score, precision_score, precision_recall_curve
 from utils.fake_loc_generator import fake_loc_gen, plausible_loc_gen
 from utils.dp_lib import usr_emb_clip, fl_dp
 import copy
 from datetime import datetime
-import joblib
 import random
 
 # load the cfg file
-# cfg = configparser.ConfigParser()
-# cfg.read('cfg.ini')
 with open("config.json", 'r') as f:
     cfg = json.load(f)
 fun_args, env_args, model_args, optim_args\
@@ -55,19 +48,25 @@ if fun_args['tensorboard']:
         model_args['fl_eps'] = 'None'
     writer = SummaryWriter(log_dir='./runs/' + 'loc_eps' + str(model_args['loc_eps']) + 'fl_eps' + str(model_args['fl_eps']))
 
-# Process the epidemic data.
-if env_args['dataset'] == 'old_data':
-    data_path = './datasets/beijing/small-unfilled-unclustered/'
+# Load the epidemic data
+if env_args['dataset'] == 'basic':
+    data_path = './datasets/beijing/Basic/'
     traj = np.load(data_path + "traj_mat.npy")
     usr_num = traj.shape[0]
-    lbls = np.load(data_path + 'label_omicron.npy')
+    if env_args['epi_dyna'] == 'SARS-CoV-2':
+        lbls = np.load(data_path + 'label.npy')
+    elif env_args['epi_dyna'] == 'Omicron':
+        lbls = np.load(data_path + 'label_omicron.npy')
     lbls = torch.tensor(lbls).to(device).squeeze()
     env_args['sim_days'] = 40
-elif env_args['dataset'] == 'largec': # chose as the benchmark.
-    data_path = './datasets/beijing/large-filled-clustered/'
+elif env_args['dataset'] == 'larger': # chose as the benchmark.
+    data_path = './datasets/beijing/Larger/'
     traj = np.load(data_path + "traj_mat(filled,sample).npy")
     usr_num = traj.shape[0]
-    lbls = np.load(data_path + 'label.npy')
+    if env_args['epi_dyna'] == 'SARS-CoV-2':
+        lbls = np.load(data_path + 'label.npy')
+    elif env_args['epi_dyna'] == 'Omicron':
+        lbls = np.load(data_path + 'label_omicron.npy')
     lbls = torch.tensor(lbls).to(device).squeeze()
     env_args['sim_days'] = 14
 
@@ -92,7 +91,10 @@ if model_args['macro']:
     inputs: shape ()
     return: shape ()
     """
-    reg_emb = np.load(data_path + 'region_epi_emb.npy')
+    if env_args['epi_dyna'] == 'SARS-CoV-2':
+        reg_emb = np.load(data_path + 'region_epi_emb.npy')
+    elif env_args['epi_dyna'] == 'Omicron':
+        reg_emb = np.load(data_path + 'region_epi_emb_omicron.npy')
     reg_emb = reg_emb.squeeze(0)
     reg_emb = reg_emb.transpose((1, 0, 2))
     emb_seq = []
@@ -115,15 +117,16 @@ if model_args['macro']:
         emb_seq.append(edge_emb)
     cfg['model_args']['loc_emb_seq'] = emb_seq
     cfg['model_args']['loc_emb_dim'] = reg_emb_dim
-        # edge_emb = np.zeros((len(index), reg_emb.shape[-1]))
-        # loc_list = np.array([loc for loc, _ in index])
-        # edge_emb = reg_emb[loc_list, :, :]
+
 
 
 # Fake location generation 
 if model_args['loc_dp']:
     fake_trajs_dir = data_path + 'fake_trajs.npy'
-    reg_epi_freq = np.load(data_path + 'region_epi_freq.npy')
+    if env_args['epi_dyna'] == 'SARS-CoV-2':
+        reg_epi_freq = np.load(data_path + 'region_epi_freq.npy')
+    elif env_args['epi_dyna'] == 'Omicron':
+        reg_epi_freq = np.load(data_path + 'region_epi_freq_omicron.npy')
     real_locs, fake_locs = plausible_loc_gen(traj[:, :env_args['sim_days']*48], seq_num=env_args['seq_num'],
                                       unique_len=env_args['unique_len'], fake_trajs_dir=fake_trajs_dir,
                                       epi_risk=reg_epi_freq, index_seq=index_seq)
@@ -134,7 +137,7 @@ if model_args['loc_dp']:
 model = MultiScaleFedGNN(usr_num=usr_num, **cfg['model_args']).to(device)
 summary(model)
 criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor([1, 1]).to(device))
-optimizer = optim.Adam(model.parameters(), lr=cfg['optim_args']["lr"], weight_decay=cfg['optim_args']["weight_decay"]) # TODO: SGD for FL?
+optimizer = optim.Adam(model.parameters(), lr=cfg['optim_args']["lr"], weight_decay=cfg['optim_args']["weight_decay"])
 schedular = optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg['optim_args']["milestones"], gamma=cfg['optim_args']['gamma'])
 
 
@@ -180,7 +183,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, print_freq=1
                         user_emb_upd = usr_emb_clip(user_emb_upd, cfg['model_args']['loc_clip'])
                         user_emb = user_emb + user_emb_upd
                         model_state['usr_emb.weight'] = user_emb
-                        model.load_state_dict(model_state) # TODO: this code may be redundant.
+                        model.load_state_dict(model_state)
                         # user_emb = new_user_emb
                     # Add noise on the updated parameters.
                     if cfg['model_args']['fl_dp']:

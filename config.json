@@ -3,7 +3,7 @@
   {
     "debug": false,
     "tensorboard": true,
-    "tsboard_comm": "largec",
+    "tsboard_comm": "larger",
     "random_seed": 42
   },
   "env_args":
@@ -12,7 +12,8 @@
     "sim_days": 14,
     "seq_num": 1,
     "unique_len": 16,
-    "dataset": "largec"
+    "dataset": "larger",
+    "epi_dyna": "Omicron"
   },
   "model_args":
   {

@@ -65,3 +65,12 @@ To train on the different scenarios, please modify the _"dataset"_ item in the c
         "dataset": "Larger"
       },
     ```
+  
+## Results Visualization
+
+To activate the visualization of experiments, please to check up the item _"tensorboard"_ in `config.json` is set to true, 
+then run the following command:
+```bash
+tensorboard --logdir runs --host 0.0.0.0
+```
+The visualization results can be found in [http://localhost:6006](http://localhost:6006)
