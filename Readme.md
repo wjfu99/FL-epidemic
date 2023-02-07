@@ -21,10 +21,11 @@ pip install -r requirements.txt
 ```
 
 ## Data Preparation
-For the consideration of the user privacy, and avoid the xxx usage of mobility data,
-the original mobility data . If you need the original mobility dataset for research, please contact with us.
+For the consideration of the user privacy, and avoid malicious usage of mobility data,
+the original mobility data is not publicly released. 
+We will instead make the dataset available upon request to the corresponding author to researchers in the field for scientific purposes.
 
-The related files (graph construction files, health status labels, etc.) for **Basic** scenario and **Larger** scenario,
+The preprocessed files (graph construction files, health status labels, etc.) for **Basic** scenario and **Larger** scenario,
 i.e., `/basic` and `/larger`, are available at [Google Drive](), and should be put into the folder `/datasets/beijing`.
 
 
