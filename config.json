@@ -4,7 +4,7 @@
     "debug": false,
     "tensorboard": true,
     "tsboard_comm": "largec",
-    "random_seed": 123
+    "random_seed": 42
   },
   "env_args":
   {
@@ -17,7 +17,7 @@
   "model_args":
   {
     "loc_dp": true,
-    "loc_eps": 4,
+    "loc_eps": 1,
     "loc_delt": 0.001,
     "loc_clip": 0.1,
     "fl_dp": true,

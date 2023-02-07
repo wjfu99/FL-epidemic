@@ -27,7 +27,7 @@
   },
   "optim_args":
   {
-    "max_epoch": 500,
+    "max_epoch": 700,
     "lr": 0.001,
     "milestones": [100, 200, 300],
     "gamma": 0.7,
