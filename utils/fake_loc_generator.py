@@ -154,11 +154,11 @@ if __name__ == "__main__":
     data_path = '../datasets/beijing/large-filled-clustered/'
     traj_mat = np.load(data_path + "traj_mat(filled,sample).npy")
     traj_mat = traj_mat[:, :14*48]
-    fake_generator = uni_iid
-    fake_mat = fake_generator(traj_mat=traj_mat)
+    fake_generator = rw_agg
 
     if not os.path.exists(data_path + fake_generator.__name__):
         os.makedirs(data_path + fake_generator.__name__)
-    for i in tqdm(range(traj_num)):
-        fake_mat = fake_generator(traj_mat=traj_mat)
-        np.save(data_path + fake_generator.__name__ + '/fake_traj_{}.npy'.format(i), fake_mat)
+    # for i in tqdm(range(traj_num)):
+    i = 19
+    fake_mat = fake_generator(traj_mat=traj_mat)
+    np.save(data_path + fake_generator.__name__ + '/fake_traj_{}.npy'.format(i), fake_mat)
