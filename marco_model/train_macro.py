@@ -5,13 +5,32 @@ from dataset import LoadData
 from torch.utils.data import DataLoader
 import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
-import graph_nets
 import time
 import numpy as np
 from RNNModel.recurrent import RNNModel
 
+datasets = 'basic'
+dynamic = 'Omicron'
 
-datasets
+if datasets == 'basic':
+    node_num = 11459
+    batch_size = 37
+
+    data_path = '../datasets/beijing/Basic/'
+    if dynamic == 'SARS-CoV-2':
+        node_feature = np.load(data_path + 'region_epi_freq.npy')
+    elif dynamic == 'Omicron':
+        node_feature = np.load(data_path + 'region_epi_freq_omicron.npy')
+elif datasets == 'larger':
+    node_num = 3578
+    batch_size = 11
+
+    data_path = '../datasets/beijing/Larger/'
+    if dynamic == 'SARS-CoV-2':
+        node_feature = np.load(data_path + 'region_epi_freq.npy')
+    elif dynamic == 'Omicron':
+        node_feature = np.load(data_path + 'region_epi_freq_omicron.npy')
+
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -19,12 +38,12 @@ def main():
     edge_index = torch.tensor(np.load('./reg_edge_idx.npy'))
     edge_weight = torch.tensor(np.load('./reg_edge_att.npy'))
     my_net = RNNModel(sparse_idx=edge_index, edge_weights=edge_weight, conv_method='GConvGRU', max_view=1,
-                      node_num=11459, layer_num=1, input_dim=1, output_dim=1, seq_len=3, horizon=1).to(device)
+                      node_num=node_num, layer_num=1, input_dim=1, output_dim=1, seq_len=3, horizon=1).to(device)
 
-    train_data = LoadData(history_length=3, train_mode="train", device=device)
-    train_loader = DataLoader(train_data, batch_size=37, shuffle=False)
-    test_data = LoadData(history_length=3, train_mode="test", device=device)
-    test_loader = DataLoader(test_data, batch_size=38, shuffle=False)
+    train_data = LoadData(history_length=3, train_mode="train", node_feature=node_feature)
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=False)
+    test_data = LoadData(history_length=3, train_mode="test", node_feature=node_feature)
+    test_loader = DataLoader(test_data, batch_size=batch_size + 1, shuffle=False)
 
     criterion = torch.nn.MSELoss()
     optimizer = optim.Adam(params=my_net.parameters(), lr=0.1)
@@ -32,23 +51,19 @@ def main():
     Epoch = 100
     my_net.train()
     Train_loss = []
-    Train_loss = []
     for epoch in range(Epoch):
         start_time = time.time()
         epoch_loss = 0.0
         for idex, data in enumerate(train_loader):
             input = data["flow_x"].to(device)
-            edge_index = data["edge_index"].to(device)
-            edge_attr = data["edge_attr"].to(device)
             target = data["flow_y"].to(device)
-            data = Data(input, edge_index, edge_attr)
             input = input.permute(2, 0, 1, 3)
             target = target.permute(2, 0, 1, 3)
             predict_value, encoder_hidden_state = my_net(input)
             loss = criterion(predict_value, target)
             epoch_loss += loss.item()
             loss.backward()
-            optimizer.step()  # 更新参数
+            optimizer.step()
             end_time = time.time()
             b = 1000 * epoch_loss / len(train_data)
             Train_loss.append(b)
@@ -65,7 +80,6 @@ def main():
         total_loss = 0.0
         Test_loss = []
         for idex, data in enumerate(test_loader):
-            # 下面得到的预测结果是归一化的结果
             input = data["flow_x"].to(device)
             edge_index = data["edge_index"].to(device)
             edge_attr = data["edge_attr"].to(device)
@@ -82,7 +96,7 @@ def main():
             # total_loss += loss.item()
 
             performance, data_to_save = compute_performance(predict_value, target,
-                                                            test_loader)  # 计算模型的性能，返回评价结果和恢复好的数据
+                                                            test_loader)
 
             MAE.append(performance[0])
             MAPE.append(performance[1])
@@ -90,20 +104,16 @@ def main():
 
             print("Test Loss: {:02.4f}".format(1000 * total_loss / len(test_data)))
         torch.save(my_net.state_dict(), 'mainmodel.pt')
-
-    # 三种指标取平均
     print("Performance:  MAE {:2.2f}    {:2.2f}%    {:2.2f}".format(np.mean(MAE), np.mean(MAPE * 100), np.mean(RMSE)))
 
 
-def compute_performance(prediction, target, data):  # 计算模型性能
-    # 下面的try和except实际上在做这样一件事：当训练+测试模型的时候，数据肯定是经过dataloader的，所以直接赋值就可以了
-    # 但是如果将训练好的模型保存下来，然后测试，那么数据就没有经过dataloader，是dataloader型的，需要转换成dataset型。
+def compute_performance(prediction, target, data):
     try:
         dataset = data.dataset
     except:
         dataset = data
 
-    # 对预测和目标数据进行逆归一化,flow_norm为归一化的基，flow_norm[0]为最大值，flow_norm[1]为最小值
+
     print("prediction：", prediction.size())
 
     prediction = LoadData.recover_data(dataset.flow_norm[0], dataset.flow_norm[1],
@@ -111,12 +121,12 @@ def compute_performance(prediction, target, data):  # 计算模型性能
     target = LoadData.recover_data(dataset.flow_norm[0], dataset.flow_norm[1],
                                    target.data.cpu().numpy())  # [5886,16,1]
 
-    mae, mape, rmse = Evaluation.total(target, prediction)  # 变成常向量才能计算这三种指标
+    mae, mape, rmse = Evaluation.total(target, prediction)
 
     performance = [mae, mape, rmse]
     recovered_data = [prediction, target]
 
-    return performance, recovered_data  # 返回评价结果，以及恢复好的数据（为可视化准备的）
+    return performance, recovered_data
 
 
 class Evaluation(object):
@@ -129,7 +139,7 @@ class Evaluation(object):
 
     @staticmethod
     def mape_(target, output):
-        return np.mean(np.abs(target - output) / (target + 5))  # 加５是因为target有可能为0，当然只要不太大，加几都行
+        return np.mean(np.abs(target - output) / (target + 5))
 
     @staticmethod
     def rmse_(target, output):
