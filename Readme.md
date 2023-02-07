@@ -26,7 +26,7 @@ the original mobility data is not publicly released.
 We will instead make the dataset available upon request to the corresponding author to researchers in the field for scientific purposes.
 
 The preprocessed files (graph construction files, health status labels, etc.) for **Basic** scenario and **Larger** scenario,
-i.e., `/basic` and `/larger`, are available at [Google Drive](), and should be put into the folder `/datasets/beijing`.
+i.e., `/basic` and `/larger`, are available at `/datasets/beijing`, and should be decompressed and put into the folder `/datasets/beijing`.
 
 
 
